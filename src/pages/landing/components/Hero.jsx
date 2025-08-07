@@ -39,7 +39,7 @@ const Hero = () => (
               <span className="button-icon">→</span>
             </button>
           </div>
-          <p className="cta-note">Free to start • No credit card required</p>
+          <p className="cta-note">Free to start</p>
         </div>
         
         <div className="hero-metrics">
