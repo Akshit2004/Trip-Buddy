@@ -6,7 +6,16 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
   const [activeTab, setActiveTab] = useState('itinerary');
 
   if (!tripPlan) {
-    return <div>No trip plan available</div>;
+    return (
+      <div className="itinerary-display">
+        <div className="container">
+          <div className="no-plan-message">
+            <h2>No trip plan available</h2>
+            <p>Please generate a trip plan first.</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const {
@@ -27,13 +36,16 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
       <div className="container">
         {/* Header */}
         <div className="itinerary-header">
-          <h1>{tripTitle}</h1>
-          <p className="overview">{overview}</p>
-          {error && (
-            <div className="error-notice">
-              <p>⚠️ {tripPlan.message}</p>
-            </div>
-          )}
+          <div className="header-content">
+            <h1>{tripTitle}</h1>
+            <p className="overview">{overview}</p>
+            {error && (
+              <div className="error-notice">
+                <div className="error-icon">⚠️</div>
+                <p>{tripPlan.message}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -42,25 +54,29 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
             className={`tab-btn ${activeTab === 'itinerary' ? 'active' : ''}`}
             onClick={() => setActiveTab('itinerary')}
           >
-            📅 Itinerary
+            <span className="tab-icon">📅</span>
+            <span className="tab-text">Itinerary</span>
           </button>
           <button 
             className={`tab-btn ${activeTab === 'places' ? 'active' : ''}`}
             onClick={() => setActiveTab('places')}
           >
-            📍 Places
+            <span className="tab-icon">📍</span>
+            <span className="tab-text">Places</span>
           </button>
           <button 
             className={`tab-btn ${activeTab === 'budget' ? 'active' : ''}`}
             onClick={() => setActiveTab('budget')}
           >
-            💰 Budget
+            <span className="tab-icon">💰</span>
+            <span className="tab-text">Budget</span>
           </button>
           <button 
             className={`tab-btn ${activeTab === 'tips' ? 'active' : ''}`}
             onClick={() => setActiveTab('tips')}
           >
-            💡 Tips
+            <span className="tab-icon">💡</span>
+            <span className="tab-text">Tips</span>
           </button>
         </div>
 
@@ -68,6 +84,11 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
         <div className="tab-content">
           {activeTab === 'itinerary' && (
             <div className="itinerary-section">
+              <div className="section-header">
+                <h2>📅 Your Daily Itinerary</h2>
+                <p>Explore your trip day by day</p>
+              </div>
+              
               <div className="day-selector">
                 {dayByDayItinerary?.map((day) => (
                   <button
@@ -75,7 +96,7 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
                     className={`day-btn ${activeDay === day.day ? 'active' : ''}`}
                     onClick={() => setActiveDay(day.day)}
                   >
-                    Day {day.day}
+                    <span className="day-number">Day {day.day}</span>
                   </button>
                 ))}
               </div>
@@ -90,7 +111,10 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
 
           {activeTab === 'places' && (
             <div className="places-section">
-              <h2>Recommended Places</h2>
+              <div className="section-header">
+                <h2>📍 Recommended Places</h2>
+                <p>Must-visit destinations for your trip</p>
+              </div>
               <div className="places-grid">
                 {recommendedPlaces?.map((place, index) => (
                   <PlaceCard key={index} place={place} />
@@ -101,21 +125,27 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
 
           {activeTab === 'budget' && (
             <div className="budget-section">
-              <h2>Budget Breakdown</h2>
+              <div className="section-header">
+                <h2>💰 Budget Overview</h2>
+                <p>Estimated costs for your trip</p>
+              </div>
               <BudgetBreakdown budgetData={budgetBreakdown} />
               
               <div className="transport-info">
-                <h3>Transportation Information</h3>
-                <div className="transport-card">
-                  <div className="transport-item">
+                <h3>🚗 Transportation Information</h3>
+                <div className="transport-grid">
+                  <div className="transport-card">
+                    <div className="transport-icon">✈️</div>
                     <h4>Getting There</h4>
                     <p>{transportationInfo?.gettingThere}</p>
                   </div>
-                  <div className="transport-item">
+                  <div className="transport-card">
+                    <div className="transport-icon">🚌</div>
                     <h4>Local Transport</h4>
                     <p>{transportationInfo?.localTransport}</p>
                   </div>
-                  <div className="transport-item">
+                  <div className="transport-card">
+                    <div className="transport-icon">💳</div>
                     <h4>Estimated Costs</h4>
                     <p>{transportationInfo?.costs}</p>
                   </div>
@@ -126,10 +156,17 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
 
           {activeTab === 'tips' && (
             <div className="tips-section">
+              <div className="section-header">
+                <h2>💡 Travel Tips & Essentials</h2>
+                <p>Everything you need to know for a perfect trip</p>
+              </div>
               <div className="tips-grid">
                 <div className="tips-card">
-                  <h3>🎒 Packing List</h3>
-                  <ul>
+                  <div className="tips-header">
+                    <div className="tips-icon">🎒</div>
+                    <h3>Packing List</h3>
+                  </div>
+                  <ul className="tips-list">
                     {packingList?.map((item, index) => (
                       <li key={index}>{item}</li>
                     ))}
@@ -137,8 +174,11 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
                 </div>
 
                 <div className="tips-card">
-                  <h3>🌟 Local Tips</h3>
-                  <ul>
+                  <div className="tips-header">
+                    <div className="tips-icon">🌟</div>
+                    <h3>Local Tips</h3>
+                  </div>
+                  <ul className="tips-list">
                     {localTips?.map((tip, index) => (
                       <li key={index}>{tip}</li>
                     ))}
@@ -146,8 +186,13 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
                 </div>
 
                 <div className="tips-card">
-                  <h3>🌤️ Best Time to Visit</h3>
-                  <p>{bestTimeToVisit}</p>
+                  <div className="tips-header">
+                    <div className="tips-icon">🌤️</div>
+                    <h3>Best Time to Visit</h3>
+                  </div>
+                  <div className="best-time-content">
+                    <p>{bestTimeToVisit}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -157,9 +202,11 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
         {/* Action Buttons */}
         <div className="action-buttons">
           <button className="btn-secondary" onClick={onPlanNew}>
+            <span className="btn-icon">🔄</span>
             Plan Another Trip
           </button>
           <button className="btn-primary" onClick={() => window.print()}>
+            <span className="btn-icon">🖨️</span>
             Print Itinerary
           </button>
           <button className="btn-primary" onClick={() => {
@@ -171,6 +218,7 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
               }) :
               navigator.clipboard.writeText(window.location.href)
           }}>
+            <span className="btn-icon">📤</span>
             Share Trip
           </button>
         </div>
@@ -182,8 +230,10 @@ const ItineraryDisplay = ({ tripPlan, onPlanNew }) => {
 // Day Itinerary Component
 const DayItinerary = ({ dayData }) => (
   <div className="day-itinerary">
-    <h2>{dayData.title}</h2>
-    <p className="day-description">{dayData.description}</p>
+    <div className="day-header">
+      <h3>{dayData.title}</h3>
+      <p className="day-description">{dayData.description}</p>
+    </div>
     
     <div className="activities-timeline">
       {dayData.activities?.map((activity, index) => (
@@ -195,12 +245,19 @@ const DayItinerary = ({ dayData }) => (
             <h4>{activity.activity}</h4>
             <p className="activity-description">{activity.description}</p>
             <div className="activity-details">
-              <span className="location">📍 {activity.location}</span>
-              <span className="cost">💰 {activity.estimatedCost}</span>
+              <div className="detail-item">
+                <span className="detail-icon">📍</span>
+                <span className="detail-text">{activity.location}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-icon">💰</span>
+                <span className="detail-text">{activity.estimatedCost}</span>
+              </div>
             </div>
             {activity.tips && (
               <div className="activity-tips">
-                <strong>💡 Tip:</strong> {activity.tips}
+                <span className="tip-icon">💡</span>
+                <span className="tip-text">{activity.tips}</span>
               </div>
             )}
           </div>
@@ -219,17 +276,25 @@ const PlaceCard = ({ place }) => (
     </div>
     <p className="place-description">{place.description}</p>
     <div className="place-details">
-      <div className="place-location">📍 {place.location}</div>
-      <div className="place-cost">💰 {place.estimatedCost}</div>
+      <div className="place-detail">
+        <span className="detail-icon">📍</span>
+        <span className="detail-text">{place.location}</span>
+      </div>
+      <div className="place-detail">
+        <span className="detail-icon">💰</span>
+        <span className="detail-text">{place.estimatedCost}</span>
+      </div>
       {place.rating && (
-        <div className="place-rating">
-          ⭐ {place.rating}/5
+        <div className="place-detail">
+          <span className="detail-icon">⭐</span>
+          <span className="detail-text">{place.rating}/5</span>
         </div>
       )}
     </div>
     {place.tips && (
       <div className="place-tips">
-        <strong>Why recommended:</strong> {place.tips}
+        <span className="tip-icon">💡</span>
+        <span className="tip-text">{place.tips}</span>
       </div>
     )}
   </div>
@@ -237,30 +302,54 @@ const PlaceCard = ({ place }) => (
 
 // Budget Breakdown Component
 const BudgetBreakdown = ({ budgetData }) => {
-  if (!budgetData) return <div>Budget information not available</div>;
+  if (!budgetData) {
+    return (
+      <div className="budget-breakdown">
+        <div className="no-budget-message">
+          <span className="info-icon">ℹ️</span>
+          <p>Budget information not available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="budget-breakdown">
       <div className="budget-summary">
-        <div className="budget-total">
-          <h3>Total Estimated Cost</h3>
-          <span className="total-amount">{budgetData.total}</span>
+        <div className="budget-card">
+          <div className="budget-icon">💵</div>
+          <div className="budget-info">
+            <h3>Total Estimated Cost</h3>
+            <span className="total-amount">{budgetData.total}</span>
+          </div>
         </div>
-        <div className="budget-daily">
-          <h4>Daily Average</h4>
-          <span className="daily-amount">{budgetData.daily}</span>
+        <div className="budget-card">
+          <div className="budget-icon">📊</div>
+          <div className="budget-info">
+            <h4>Daily Average</h4>
+            <span className="daily-amount">{budgetData.daily}</span>
+          </div>
         </div>
       </div>
 
       {budgetData.breakdown && (
         <div className="budget-categories">
-          <h3>Cost Breakdown</h3>
+          <h3>💰 Cost Breakdown</h3>
           <div className="category-grid">
             {Object.entries(budgetData.breakdown).map(([category, cost]) => (
               <div key={category} className="category-item">
-                <span className="category-name">
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </span>
+                <div className="category-header">
+                  <span className="category-icon">
+                    {category === 'accommodation' && '🏨'}
+                    {category === 'food' && '🍽️'}
+                    {category === 'activities' && '🎯'}
+                    {category === 'transport' && '🚗'}
+                    {!['accommodation', 'food', 'activities', 'transport'].includes(category) && '💳'}
+                  </span>
+                  <span className="category-name">
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </span>
+                </div>
                 <span className="category-cost">{cost}</span>
               </div>
             ))}

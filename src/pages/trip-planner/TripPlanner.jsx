@@ -150,7 +150,6 @@ const TripPlanner = () => {
                 </div>
                 <div className="date-inputs">
                   <div className="input-group">
-                    <label>Start Date</label>
                     <input
                       type="date"
                       value={formData.startDate}
