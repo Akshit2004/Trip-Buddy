@@ -4,7 +4,6 @@ import ItineraryDisplay from './components/ItineraryDisplay';
 import geminiService from '../../services/geminiService';
 
 const TripPlanner = () => {
-  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     destination: '',
     startDate: '',
@@ -17,43 +16,68 @@ const TripPlanner = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
+  const [errors, setErrors] = useState({});
 
-  const totalSteps = 7;
+  // Function to calculate end date from start date and duration
+  const calculateEndDate = (startDate, duration) => {
+    if (!startDate || !duration) return '';
+    
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(start.getDate() + duration - 1); // Subtract 1 because if you travel for 3 days starting Monday, you end on Wednesday
+    
+    return end.toISOString().split('T')[0];
+  };
 
   const updateFormData = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const nextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(prev => prev + 1);
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [field]: value
+      };
+      
+      // Auto-calculate end date when start date or duration changes
+      if (field === 'startDate' || field === 'duration') {
+        const startDate = field === 'startDate' ? value : prev.startDate;
+        const duration = field === 'duration' ? value : prev.duration;
+        newData.endDate = calculateEndDate(startDate, duration);
+      }
+      
+      return newData;
+    });
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
-  const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.destination.trim()) {
+      newErrors.destination = 'Destination is required';
     }
+    if (!formData.budget) {
+      newErrors.budget = 'Budget selection is required';
+    }
+    if (!formData.companions) {
+      newErrors.companions = 'Travel companion selection is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Validate required fields
-      if (!formData.destination || !formData.budget || !formData.companions) {
-        alert('Please fill in all required fields: destination, budget, and travel companions.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Generate trip plan using Gemini AI
       console.log('Generating trip plan with data:', formData);
       const tripPlan = await geminiService.generateTripPlan(formData);
       console.log('Generated trip plan:', tripPlan);
-      
       setGeneratedPlan(tripPlan);
     } catch (error) {
       console.error('Error generating trip plan:', error);
@@ -63,45 +87,26 @@ const TripPlanner = () => {
     }
   };
 
-  const renderCurrentStep = () => {
-    switch (currentStep) {
-      case 1:
-        return <DestinationStep formData={formData} updateFormData={updateFormData} />;
-      case 2:
-        return <DateStep formData={formData} updateFormData={updateFormData} />;
-      case 3:
-        return <DurationStep formData={formData} updateFormData={updateFormData} />;
-      case 4:
-        return <BudgetStep formData={formData} updateFormData={updateFormData} />;
-      case 5:
-        return <CompanionStep formData={formData} updateFormData={updateFormData} />;
-      case 6:
-        return <ActivityStep formData={formData} updateFormData={updateFormData} />;
-      case 7:
-        return <ReviewStep formData={formData} updateFormData={updateFormData} />;
-      default:
-        return null;
-    }
+  const resetForm = () => {
+    setGeneratedPlan(null);
+    setFormData({
+      destination: '',
+      startDate: '',
+      endDate: '',
+      duration: 3,
+      budget: '',
+      companions: '',
+      activities: [],
+      additionalPreferences: ''
+    });
+    setErrors({});
   };
 
   if (generatedPlan) {
     return (
       <ItineraryDisplay 
         tripPlan={generatedPlan} 
-        onPlanNew={() => {
-          setGeneratedPlan(null);
-          setCurrentStep(1);
-          setFormData({
-            destination: '',
-            startDate: '',
-            endDate: '',
-            duration: 3,
-            budget: '',
-            companions: '',
-            activities: [],
-            additionalPreferences: ''
-          });
-        }}
+        onPlanNew={resetForm}
       />
     );
   }
@@ -110,46 +115,184 @@ const TripPlanner = () => {
     <div className="trip-planner">
       <div className="container">
         <div className="planner-header">
-          <h1>Tell us your travel preferences</h1>
-          <p>Just provide some basic information, and our trip planner will generate a customized itinerary based on your preferences.</p>
+          <h1>Plan Your Perfect Trip</h1>
+          <p>Fill out your travel preferences below, and our AI will create a personalized itinerary just for you.</p>
         </div>
-
-        <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
 
         <div className="form-container">
           {isLoading ? (
             <LoadingSpinner />
           ) : (
-            <>
-              {renderCurrentStep()}
-              
-              <div className="form-navigation">
-                {currentStep > 1 && (
-                  <button 
-                    className="btn-secondary" 
-                    onClick={prevStep}
-                  >
-                    Previous
-                  </button>
-                )}
-                
-                {currentStep < totalSteps ? (
-                  <button 
-                    className="btn-primary" 
-                    onClick={nextStep}
-                  >
-                    Next
-                  </button>
-                ) : (
-                  <button 
-                    className="btn-primary" 
-                    onClick={handleSubmit}
-                  >
-                    Generate My Trip Plan
-                  </button>
-                )}
+            <div className="single-page-form">
+              {/* Destination Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>🌍 Where do you want to go?</h2>
+                  <p>Enter your dream destination</p>
+                </div>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    placeholder="e.g., Paris, Tokyo, New York..."
+                    value={formData.destination}
+                    onChange={(e) => updateFormData('destination', e.target.value)}
+                    className={`destination-input ${errors.destination ? 'error' : ''}`}
+                  />
+                  {errors.destination && <span className="error-message">{errors.destination}</span>}
+                </div>
               </div>
-            </>
+
+              {/* Dates Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>📅 When are you traveling?</h2>
+                  <p>Select your start date (optional)</p>
+                </div>
+                <div className="date-inputs">
+                  <div className="input-group">
+                    <label>Start Date</label>
+                    <input
+                      type="date"
+                      value={formData.startDate}
+                      onChange={(e) => updateFormData('startDate', e.target.value)}
+                      className="date-input"
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
+                  {formData.startDate && formData.endDate && (
+                    <div className="input-group">
+                      <label>End Date (Calculated)</label>
+                      <div className="calculated-date">
+                        {new Date(formData.endDate).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Duration Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>⏰ How long is your trip?</h2>
+                  <p>Number of days you'll be traveling</p>
+                </div>
+                <div className="duration-selector">
+                  <button 
+                    onClick={() => updateFormData('duration', Math.max(1, formData.duration - 1))}
+                    className="counter-btn"
+                    type="button"
+                  >
+                    -
+                  </button>
+                  <div className="duration-display">
+                    <span className="duration-number">{formData.duration}</span>
+                    <span className="duration-text">Day{formData.duration !== 1 ? 's' : ''}</span>
+                  </div>
+                  <button 
+                    onClick={() => updateFormData('duration', formData.duration + 1)}
+                    className="counter-btn"
+                    type="button"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              {/* Budget Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>💰 What's your budget?</h2>
+                  <p>Budget for activities and dining</p>
+                </div>
+                <div className="budget-options">
+                  {[
+                    { value: 'Low', icon: '💵', range: '$0 - $1000', description: 'Budget-friendly options' },
+                    { value: 'Medium', icon: '💸', range: '$1000 - $2500', description: 'Comfortable spending' },
+                    { value: 'High', icon: '💎', range: '$2500+', description: 'Premium experiences' }
+                  ].map(budget => (
+                    <div 
+                      key={budget.value}
+                      className={`budget-card ${formData.budget === budget.value ? 'selected' : ''} ${errors.budget ? 'error-border' : ''}`}
+                      onClick={() => updateFormData('budget', budget.value)}
+                    >
+                      <div className="budget-icon">{budget.icon}</div>
+                      <h3>{budget.value}</h3>
+                      <p className="budget-range">{budget.range}</p>
+                      <p className="budget-desc">{budget.description}</p>
+                    </div>
+                  ))}
+                </div>
+                {errors.budget && <span className="error-message">{errors.budget}</span>}
+              </div>
+
+              {/* Companions Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>👥 Who's joining you?</h2>
+                  <p>Select your travel companions</p>
+                </div>
+                <div className="companion-options">
+                  {[
+                    { value: 'Solo', icon: '🧳', description: 'Just me' },
+                    { value: 'Couple', icon: '💕', description: 'Romantic getaway' },
+                    { value: 'Family', icon: '👨‍👩‍👧‍👦', description: 'Family vacation' },
+                    { value: 'Friends', icon: '🎉', description: 'Friends trip' }
+                  ].map(companion => (
+                    <div 
+                      key={companion.value}
+                      className={`companion-card ${formData.companions === companion.value ? 'selected' : ''} ${errors.companions ? 'error-border' : ''}`}
+                      onClick={() => updateFormData('companions', companion.value)}
+                    >
+                      <div className="companion-icon">{companion.icon}</div>
+                      <h3>{companion.value}</h3>
+                      <p>{companion.description}</p>
+                    </div>
+                  ))}
+                </div>
+                {errors.companions && <span className="error-message">{errors.companions}</span>}
+              </div>
+
+              {/* Activities Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>🎯 What interests you?</h2>
+                  <p>Select activities you'd like to experience (optional)</p>
+                </div>
+                <ActivitySelector formData={formData} updateFormData={updateFormData} />
+              </div>
+
+              {/* Additional Preferences */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h2>✨ Any special requests?</h2>
+                  <p>Dietary restrictions, accessibility needs, or other preferences</p>
+                </div>
+                <textarea
+                  placeholder="Tell us about any dietary restrictions, accessibility needs, or special requests..."
+                  value={formData.additionalPreferences}
+                  onChange={(e) => updateFormData('additionalPreferences', e.target.value)}
+                  className="preferences-textarea"
+                  rows="4"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="form-submit">
+                <button 
+                  className="btn-primary generate-btn"
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                >
+                  <span className="btn-icon">🚀</span>
+                  Generate My Perfect Trip
+                </button>
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -157,121 +300,21 @@ const TripPlanner = () => {
   );
 };
 
-// Placeholder components - will be implemented next
-const DestinationStep = ({ formData, updateFormData }) => (
-  <div className="form-step">
-    <h2>What is destination of choice?</h2>
-    <input
-      type="text"
-      placeholder="Enter destination"
-      value={formData.destination}
-      onChange={(e) => updateFormData('destination', e.target.value)}
-      className="destination-input"
-    />
-  </div>
-);
-
-const DateStep = ({ formData, updateFormData }) => (
-  <div className="form-step">
-    <h2>When are you planning to travel?</h2>
-    <div className="date-inputs">
-      <input
-        type="date"
-        value={formData.startDate}
-        onChange={(e) => updateFormData('startDate', e.target.value)}
-        className="date-input"
-      />
-      <input
-        type="date"
-        value={formData.endDate}
-        onChange={(e) => updateFormData('endDate', e.target.value)}
-        className="date-input"
-      />
-    </div>
-  </div>
-);
-
-const DurationStep = ({ formData, updateFormData }) => (
-  <div className="form-step">
-    <h2>How many days are you planning to travel?</h2>
-    <div className="duration-selector">
-      <span>Day</span>
-      <div className="counter">
-        <button 
-          onClick={() => updateFormData('duration', Math.max(1, formData.duration - 1))}
-          className="counter-btn"
-        >
-          -
-        </button>
-        <span className="counter-value">{formData.duration}</span>
-        <button 
-          onClick={() => updateFormData('duration', formData.duration + 1)}
-          className="counter-btn"
-        >
-          +
-        </button>
-      </div>
-    </div>
-  </div>
-);
-
-const BudgetStep = ({ formData, updateFormData }) => (
-  <div className="form-step">
-    <h2>What is Your Budget?</h2>
-    <p className="budget-description">The budget is exclusively allocated for activities and dining purposes.</p>
-    <div className="budget-options">
-      {['Low', 'Medium', 'High'].map(budget => (
-        <div 
-          key={budget}
-          className={`budget-card ${formData.budget === budget ? 'selected' : ''}`}
-          onClick={() => updateFormData('budget', budget)}
-        >
-          <div className="budget-icon">💰</div>
-          <h3>{budget}</h3>
-          <p>
-            {budget === 'Low' && '0 - 1000 USD'}
-            {budget === 'Medium' && '1000 - 2500 USD'}
-            {budget === 'High' && '2500+ USD'}
-          </p>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const CompanionStep = ({ formData, updateFormData }) => (
-  <div className="form-step">
-    <h2>Who do you plan on traveling with on your next adventure?</h2>
-    <div className="companion-options">
-      {[
-        { value: 'Solo', icon: '👤' },
-        { value: 'Couple', icon: '👫' },
-        { value: 'Family', icon: '👨‍👩‍👧‍👦' },
-        { value: 'Friends', icon: '👥' }
-      ].map(companion => (
-        <div 
-          key={companion.value}
-          className={`companion-card ${formData.companions === companion.value ? 'selected' : ''}`}
-          onClick={() => updateFormData('companions', companion.value)}
-        >
-          <div className="companion-icon">{companion.icon}</div>
-          <h3>{companion.value}</h3>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const ActivityStep = ({ formData, updateFormData }) => {
+// Activity Selector Component
+const ActivitySelector = ({ formData, updateFormData }) => {
   const activities = [
-    { name: 'Beaches', icon: '🏖️' },
-    { name: 'City sightseeing', icon: '🏛️' },
-    { name: 'Outdoor adventures', icon: '🏔️' },
-    { name: 'Festivals/events', icon: '🎭' },
-    { name: 'Food exploration', icon: '🍜' },
-    { name: 'Nightlife', icon: '🌃' },
-    { name: 'Shopping', icon: '🛍️' },
-    { name: 'Spa wellness', icon: '🧘‍♀️' }
+    { name: 'Beaches', icon: '🏖️', category: 'Relaxation' },
+    { name: 'City sightseeing', icon: '🏛️', category: 'Culture' },
+    { name: 'Outdoor adventures', icon: '🏔️', category: 'Adventure' },
+    { name: 'Festivals/events', icon: '🎭', category: 'Entertainment' },
+    { name: 'Food exploration', icon: '🍜', category: 'Culinary' },
+    { name: 'Nightlife', icon: '🌃', category: 'Entertainment' },
+    { name: 'Shopping', icon: '�️', category: 'Leisure' },
+    { name: 'Spa wellness', icon: '🧘‍♀️', category: 'Relaxation' },
+    { name: 'Museums', icon: '🖼️', category: 'Culture' },
+    { name: 'Photography', icon: '📸', category: 'Creative' },
+    { name: 'Wildlife', icon: '🦋', category: 'Nature' },
+    { name: 'Water sports', icon: '🏄‍♂️', category: 'Adventure' }
   ];
 
   const toggleActivity = (activity) => {
@@ -286,74 +329,43 @@ const ActivityStep = ({ formData, updateFormData }) => {
   };
 
   return (
-    <div className="form-step">
-      <h2>Which activities are you interested in?</h2>
-      <div className="activity-grid">
-        {activities.map(activity => (
-          <div 
-            key={activity.name}
-            className={`activity-card ${formData.activities?.includes(activity.name) ? 'selected' : ''}`}
-            onClick={() => toggleActivity(activity.name)}
-          >
-            <div className="activity-icon">{activity.icon}</div>
-            <h3>{activity.name}</h3>
-          </div>
-        ))}
-      </div>
+    <div className="activity-grid">
+      {activities.map(activity => (
+        <div 
+          key={activity.name}
+          className={`activity-card ${formData.activities?.includes(activity.name) ? 'selected' : ''}`}
+          onClick={() => toggleActivity(activity.name)}
+        >
+          <div className="activity-icon">{activity.icon}</div>
+          <h4>{activity.name}</h4>
+          <span className="activity-category">{activity.category}</span>
+        </div>
+      ))}
     </div>
   );
 };
 
-const ReviewStep = ({ formData, updateFormData }) => (
-  <div className="form-step">
-    <h2>Review Your Preferences</h2>
-    <div className="review-summary">
-      <div className="review-item">
-        <strong>Destination:</strong> {formData.destination || 'Not specified'}
-      </div>
-      <div className="review-item">
-        <strong>Duration:</strong> {formData.duration} days
-      </div>
-      <div className="review-item">
-        <strong>Budget:</strong> {formData.budget || 'Not specified'}
-      </div>
-      <div className="review-item">
-        <strong>Companions:</strong> {formData.companions || 'Not specified'}
-      </div>
-      <div className="review-item">
-        <strong>Activities:</strong> {formData.activities?.join(', ') || 'None selected'}
-      </div>
-    </div>
-    
-    <div className="additional-preferences">
-      <h3>Any additional preferences?</h3>
-      <textarea
-        placeholder="Tell us about any dietary restrictions, accessibility needs, or special requests..."
-        value={formData.additionalPreferences}
-        onChange={(e) => updateFormData('additionalPreferences', e.target.value)}
-        className="preferences-textarea"
-      />
-    </div>
-  </div>
-);
-
-const ProgressIndicator = ({ currentStep, totalSteps }) => (
-  <div className="progress-indicator">
-    <div className="progress-bar">
-      <div 
-        className="progress-fill"
-        style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-      ></div>
-    </div>
-    <span className="progress-text">Step {currentStep} of {totalSteps}</span>
-  </div>
-);
-
+// Loading Spinner Component
 const LoadingSpinner = () => (
   <div className="loading-spinner">
-    <div className="spinner"></div>
-    <h2>Generating your personalized trip plan...</h2>
-    <p>Our AI is analyzing your preferences and creating the perfect itinerary for you!</p>
+    <div className="spinner-container">
+      <div className="spinner"></div>
+      <div className="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div className="loading-content">
+      <h2>Creating Your Dream Itinerary</h2>
+      <p>Our AI is analyzing your preferences and crafting the perfect travel plan...</p>
+      <div className="loading-steps">
+        <div className="loading-step active">🧠 Analyzing preferences</div>
+        <div className="loading-step">🌍 Finding destinations</div>
+        <div className="loading-step">🗓️ Planning schedule</div>
+        <div className="loading-step">✨ Adding special touches</div>
+      </div>
+    </div>
   </div>
 );
 
