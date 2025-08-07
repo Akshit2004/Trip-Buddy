@@ -1,7 +1,15 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../LandingPage.css';
 
-const Hero = () => (
+const Hero = () => {
+  const navigate = useNavigate();
+
+  const handlePlanTripClick = () => {
+    navigate('/plan');
+  };
+
+  return (
   <section className="hero" id="home">
     <div className="hero-background">
       <div className="floating-elements">
@@ -34,7 +42,7 @@ const Hero = () => (
               placeholder="Where do you want to go?" 
               className="destination-input"
             />
-            <button className="cta-button">
+            <button className="cta-button" onClick={handlePlanTripClick}>
               <span>Plan My Trip</span>
               <span className="button-icon">→</span>
             </button>
@@ -100,6 +108,7 @@ const Hero = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 export default Hero;

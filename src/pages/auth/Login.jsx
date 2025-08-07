@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { auth, googleProvider } from '../../firebase/config';
 import { signInWithPopup } from 'firebase/auth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Login.css';
 
+import { onAuthStateChanged } from 'firebase/auth';
+
 const Login = () => {
+  const navigate = useNavigate();
+  // Redirect to chat if already logged in
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate('/plan', { replace: true });
+      }
+    });
+    return () => unsubscribe();
+  }, [navigate]);
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     name: '',

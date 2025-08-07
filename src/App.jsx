@@ -4,6 +4,7 @@ import Navbar from './components/Navbar/Navbar'
 import Footer from './components/footer/Footer'
 import LandingPage from './pages/landing/LandingPage'
 import Login from './pages/auth/Login'
+import TripPlanner from './pages/trip-planner/TripPlanner'
 import './App.css'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             </>
           } />
           <Route path="/auth" element={<Login />} />
+          <Route path="/plan" element={<TripPlanner />} />
         </Routes>
       </Router>
     </div>
