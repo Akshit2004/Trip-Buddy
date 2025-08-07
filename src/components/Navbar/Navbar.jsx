@@ -49,31 +49,7 @@ const Navbar = () => {
           
           <div className="menu-content">
 
-            <div className="nav-links">
-              <a href="#home" className="navbar-link" onClick={handleLinkClick}>
-                <span className="link-text">Home</span>
-              </a>
-              <a href="#features" className="navbar-link" onClick={handleLinkClick}>
-                <span className="link-text">Features</span>
-              </a>
-              <a href="#how-it-works" className="navbar-link" onClick={handleLinkClick}>
-                <span className="link-text">How It Works</span>
-              </a>
-              <a href="#benefits" className="navbar-link" onClick={handleLinkClick}>
-                <span className="link-text">Benefits</span>
-              </a>
-              <a href="#testimonials" className="navbar-link" onClick={handleLinkClick}>
-                <span className="link-text">Testimonials</span>
-              </a>
-              <a href="#contact" className="navbar-link" onClick={handleLinkClick}>
-                <span className="link-text">Contact</span>
-              </a>
-            </div>
-
             <div className="navbar-buttons">
-              <button className="btn-secondary" onClick={closeMenu}>
-                <span>Sign In</span>
-              </button>
               <button className="btn-primary" onClick={closeMenu}>
                 <span>Get Started</span>
                 <svg className="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
