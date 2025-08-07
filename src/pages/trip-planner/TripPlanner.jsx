@@ -1,197 +1,360 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-
+import React, { useState } from 'react';
 import './TripPlanner.css';
-import TripyBubble from './components/TripyBubble';
-import TripyHeader from './components/TripyHeader';
-import TripyMessages from './components/TripyMessages';
-import TripyInput from './components/TripyInput';
-import TripyProgress from './components/TripyProgress';
+import ItineraryDisplay from './components/ItineraryDisplay';
+import geminiService from '../../services/geminiService';
 
 const TripPlanner = () => {
-  const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState('greeting');
-  const [tripData, setTripData] = useState({
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
     destination: '',
+    startDate: '',
+    endDate: '',
+    duration: 3,
     budget: '',
-    duration: '',
-    interests: [],
-    travelers: ''
+    companions: '',
+    activities: [],
+    additionalPreferences: ''
   });
-  const messagesEndRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [generatedPlan, setGeneratedPlan] = useState(null);
 
-  // Initialize Gemini AI
-  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const totalSteps = 7;
 
-  useEffect(() => {
-    // Initial greeting
-    setMessages([
-      {
-        type: 'ai',
-        content: "Hello, I'm Tripy, your intelligent travel companion. I'm here to help you plan the perfect trip. Where would you like to explore?",
-        timestamp: new Date()
-      }
-    ]);
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const generateAIResponse = async (userInput) => {
-    try {
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      
-      let prompt = '';
-      
-      switch (currentStep) {
-        case 'greeting':
-          prompt = `You are Tripy, an AI travel assistant. The user wants to travel to: "${userInput}". 
-          Provide a brief, enthusiastic response about their destination choice and ask about their budget range. 
-          Keep it conversational and like a friendly, futuristic AI assistant. Keep response under 100 words.`;
-          setTripData(prev => ({ ...prev, destination: userInput }));
-          setCurrentStep('budget');
-          break;
-        
-        case 'budget':
-          prompt = `The user's budget is: "${userInput}". Acknowledge their budget and ask about the duration of their trip (how many days). 
-          Be encouraging about what they can do within their budget. Keep response under 80 words.`;
-          setTripData(prev => ({ ...prev, budget: userInput }));
-          setCurrentStep('duration');
-          break;
-        
-        case 'duration':
-          prompt = `The user wants to travel for: "${userInput}". Acknowledge the duration and ask about their interests 
-          (adventure, culture, food, nightlife, nature, history, etc.). Keep the Tripy personality. Keep response under 80 words.`;
-          setTripData(prev => ({ ...prev, duration: userInput }));
-          setCurrentStep('interests');
-          break;
-        
-        case 'interests':
-          prompt = `The user's interests are: "${userInput}". Ask about the number of travelers (solo, couple, family, friends group). Keep response under 60 words.`;
-          setTripData(prev => ({ ...prev, interests: userInput.split(',').map(i => i.trim()) }));
-          setCurrentStep('travelers');
-          break;
-        
-        case 'travelers':
-          setTripData(prev => ({ ...prev, travelers: userInput }));
-          setCurrentStep('planning');
-          prompt = `Based on this travel information:
-          - Destination: ${tripData.destination}
-          - Budget: ${tripData.budget}
-          - Duration: ${tripData.duration}
-          - Interests: ${tripData.interests.join(', ')}
-          - Travelers: ${userInput}
-          
-          Create a comprehensive travel plan with:
-          1. Best time to visit
-          2. Recommended accommodations within budget
-          3. Must-visit attractions based on interests
-          4. Local cuisine recommendations
-          5. Daily itinerary suggestions
-          6. Travel tips specific to the destination
-          
-          Present this as Tripy would - organized, detailed, and personalized. Keep it concise but informative.`;
-          break;
-        
-        default:
-          prompt = `Continue the conversation as Tripy, the AI travel assistant. Respond to: "${userInput}" 
-          in the context of travel planning for ${tripData.destination}. Keep response under 150 words.`;
-      }
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Error generating AI response:', error);
-      
-      // Handle quota exceeded error specifically
-      if (error.message?.includes('429') || error.message?.includes('quota')) {
-        return "I'm currently experiencing high demand. Please wait a moment before sending another message. You can also try refreshing the page or coming back in a few minutes.";
-      }
-      
-      // Handle other API errors
-      if (error.message?.includes('API key')) {
-        return "There seems to be an issue with the API configuration. Please check your API key setup.";
-      }
-      
-      return "I apologize, but I'm experiencing some technical difficulties. Please try again in a moment.";
+  const nextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
 
-    const userMessage = {
-      type: 'user',
-      content: inputValue,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputValue('');
+  const handleSubmit = async () => {
     setIsLoading(true);
-
     try {
-      const aiResponse = await generateAIResponse(inputValue);
-      
-      const aiMessage = {
-        type: 'ai',
-        content: aiResponse,
-        timestamp: new Date()
-      };
+      // Validate required fields
+      if (!formData.destination || !formData.budget || !formData.companions) {
+        alert('Please fill in all required fields: destination, budget, and travel companions.');
+        setIsLoading(false);
+        return;
+      }
 
-      setMessages(prev => [...prev, aiMessage]);
+      // Generate trip plan using Gemini AI
+      console.log('Generating trip plan with data:', formData);
+      const tripPlan = await geminiService.generateTripPlan(formData);
+      console.log('Generated trip plan:', tripPlan);
+      
+      setGeneratedPlan(tripPlan);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error generating trip plan:', error);
+      alert('Sorry, we encountered an error generating your trip plan. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <DestinationStep formData={formData} updateFormData={updateFormData} />;
+      case 2:
+        return <DateStep formData={formData} updateFormData={updateFormData} />;
+      case 3:
+        return <DurationStep formData={formData} updateFormData={updateFormData} />;
+      case 4:
+        return <BudgetStep formData={formData} updateFormData={updateFormData} />;
+      case 5:
+        return <CompanionStep formData={formData} updateFormData={updateFormData} />;
+      case 6:
+        return <ActivityStep formData={formData} updateFormData={updateFormData} />;
+      case 7:
+        return <ReviewStep formData={formData} updateFormData={updateFormData} />;
+      default:
+        return null;
+    }
+  };
+
+  if (generatedPlan) {
+    return (
+      <ItineraryDisplay 
+        tripPlan={generatedPlan} 
+        onPlanNew={() => {
+          setGeneratedPlan(null);
+          setCurrentStep(1);
+          setFormData({
+            destination: '',
+            startDate: '',
+            endDate: '',
+            duration: 3,
+            budget: '',
+            companions: '',
+            activities: [],
+            additionalPreferences: ''
+          });
+        }}
+      />
+    );
+  }
+
+  return (
+    <div className="trip-planner">
+      <div className="container">
+        <div className="planner-header">
+          <h1>Tell us your travel preferences</h1>
+          <p>Just provide some basic information, and our trip planner will generate a customized itinerary based on your preferences.</p>
+        </div>
+
+        <ProgressIndicator currentStep={currentStep} totalSteps={totalSteps} />
+
+        <div className="form-container">
+          {isLoading ? (
+            <LoadingSpinner />
+          ) : (
+            <>
+              {renderCurrentStep()}
+              
+              <div className="form-navigation">
+                {currentStep > 1 && (
+                  <button 
+                    className="btn-secondary" 
+                    onClick={prevStep}
+                  >
+                    Previous
+                  </button>
+                )}
+                
+                {currentStep < totalSteps ? (
+                  <button 
+                    className="btn-primary" 
+                    onClick={nextStep}
+                  >
+                    Next
+                  </button>
+                ) : (
+                  <button 
+                    className="btn-primary" 
+                    onClick={handleSubmit}
+                  >
+                    Generate My Trip Plan
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Placeholder components - will be implemented next
+const DestinationStep = ({ formData, updateFormData }) => (
+  <div className="form-step">
+    <h2>What is destination of choice?</h2>
+    <input
+      type="text"
+      placeholder="Enter destination"
+      value={formData.destination}
+      onChange={(e) => updateFormData('destination', e.target.value)}
+      className="destination-input"
+    />
+  </div>
+);
+
+const DateStep = ({ formData, updateFormData }) => (
+  <div className="form-step">
+    <h2>When are you planning to travel?</h2>
+    <div className="date-inputs">
+      <input
+        type="date"
+        value={formData.startDate}
+        onChange={(e) => updateFormData('startDate', e.target.value)}
+        className="date-input"
+      />
+      <input
+        type="date"
+        value={formData.endDate}
+        onChange={(e) => updateFormData('endDate', e.target.value)}
+        className="date-input"
+      />
+    </div>
+  </div>
+);
+
+const DurationStep = ({ formData, updateFormData }) => (
+  <div className="form-step">
+    <h2>How many days are you planning to travel?</h2>
+    <div className="duration-selector">
+      <span>Day</span>
+      <div className="counter">
+        <button 
+          onClick={() => updateFormData('duration', Math.max(1, formData.duration - 1))}
+          className="counter-btn"
+        >
+          -
+        </button>
+        <span className="counter-value">{formData.duration}</span>
+        <button 
+          onClick={() => updateFormData('duration', formData.duration + 1)}
+          className="counter-btn"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const BudgetStep = ({ formData, updateFormData }) => (
+  <div className="form-step">
+    <h2>What is Your Budget?</h2>
+    <p className="budget-description">The budget is exclusively allocated for activities and dining purposes.</p>
+    <div className="budget-options">
+      {['Low', 'Medium', 'High'].map(budget => (
+        <div 
+          key={budget}
+          className={`budget-card ${formData.budget === budget ? 'selected' : ''}`}
+          onClick={() => updateFormData('budget', budget)}
+        >
+          <div className="budget-icon">💰</div>
+          <h3>{budget}</h3>
+          <p>
+            {budget === 'Low' && '0 - 1000 USD'}
+            {budget === 'Medium' && '1000 - 2500 USD'}
+            {budget === 'High' && '2500+ USD'}
+          </p>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const CompanionStep = ({ formData, updateFormData }) => (
+  <div className="form-step">
+    <h2>Who do you plan on traveling with on your next adventure?</h2>
+    <div className="companion-options">
+      {[
+        { value: 'Solo', icon: '👤' },
+        { value: 'Couple', icon: '👫' },
+        { value: 'Family', icon: '👨‍👩‍👧‍👦' },
+        { value: 'Friends', icon: '👥' }
+      ].map(companion => (
+        <div 
+          key={companion.value}
+          className={`companion-card ${formData.companions === companion.value ? 'selected' : ''}`}
+          onClick={() => updateFormData('companions', companion.value)}
+        >
+          <div className="companion-icon">{companion.icon}</div>
+          <h3>{companion.value}</h3>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const ActivityStep = ({ formData, updateFormData }) => {
+  const activities = [
+    { name: 'Beaches', icon: '🏖️' },
+    { name: 'City sightseeing', icon: '🏛️' },
+    { name: 'Outdoor adventures', icon: '🏔️' },
+    { name: 'Festivals/events', icon: '🎭' },
+    { name: 'Food exploration', icon: '🍜' },
+    { name: 'Nightlife', icon: '🌃' },
+    { name: 'Shopping', icon: '🛍️' },
+    { name: 'Spa wellness', icon: '🧘‍♀️' }
+  ];
+
+  const toggleActivity = (activity) => {
+    const currentActivities = formData.activities || [];
+    const isSelected = currentActivities.includes(activity);
+    
+    if (isSelected) {
+      updateFormData('activities', currentActivities.filter(a => a !== activity));
+    } else {
+      updateFormData('activities', [...currentActivities, activity]);
     }
   };
 
   return (
-    <div className="trip-planner">
-      {/* Animated Background */}
-      <div className="jarvis-background">
-        <div className="grid-overlay"></div>
-        <div className="energy-particles"></div>
+    <div className="form-step">
+      <h2>Which activities are you interested in?</h2>
+      <div className="activity-grid">
+        {activities.map(activity => (
+          <div 
+            key={activity.name}
+            className={`activity-card ${formData.activities?.includes(activity.name) ? 'selected' : ''}`}
+            onClick={() => toggleActivity(activity.name)}
+          >
+            <div className="activity-icon">{activity.icon}</div>
+            <h3>{activity.name}</h3>
+          </div>
+        ))}
       </div>
-
-      {/* Floating Liquid Bubble */}
-      <TripyBubble />
-
-      {/* Chat Interface */}
-      <div className="chat-container">
-        <TripyHeader />
-        <TripyMessages messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
-        <TripyInput
-          inputValue={inputValue}
-          setInputValue={setInputValue}
-          handleKeyPress={handleKeyPress}
-          handleSendMessage={handleSendMessage}
-          isLoading={isLoading}
-        />
-      </div>
-
-      {/* Progress Indicator */}
-      <TripyProgress currentStep={currentStep} />
     </div>
   );
 };
+
+const ReviewStep = ({ formData, updateFormData }) => (
+  <div className="form-step">
+    <h2>Review Your Preferences</h2>
+    <div className="review-summary">
+      <div className="review-item">
+        <strong>Destination:</strong> {formData.destination || 'Not specified'}
+      </div>
+      <div className="review-item">
+        <strong>Duration:</strong> {formData.duration} days
+      </div>
+      <div className="review-item">
+        <strong>Budget:</strong> {formData.budget || 'Not specified'}
+      </div>
+      <div className="review-item">
+        <strong>Companions:</strong> {formData.companions || 'Not specified'}
+      </div>
+      <div className="review-item">
+        <strong>Activities:</strong> {formData.activities?.join(', ') || 'None selected'}
+      </div>
+    </div>
+    
+    <div className="additional-preferences">
+      <h3>Any additional preferences?</h3>
+      <textarea
+        placeholder="Tell us about any dietary restrictions, accessibility needs, or special requests..."
+        value={formData.additionalPreferences}
+        onChange={(e) => updateFormData('additionalPreferences', e.target.value)}
+        className="preferences-textarea"
+      />
+    </div>
+  </div>
+);
+
+const ProgressIndicator = ({ currentStep, totalSteps }) => (
+  <div className="progress-indicator">
+    <div className="progress-bar">
+      <div 
+        className="progress-fill"
+        style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+      ></div>
+    </div>
+    <span className="progress-text">Step {currentStep} of {totalSteps}</span>
+  </div>
+);
+
+const LoadingSpinner = () => (
+  <div className="loading-spinner">
+    <div className="spinner"></div>
+    <h2>Generating your personalized trip plan...</h2>
+    <p>Our AI is analyzing your preferences and creating the perfect itinerary for you!</p>
+  </div>
+);
 
 export default TripPlanner;
