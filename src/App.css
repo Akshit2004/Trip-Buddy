@@ -5,21 +5,24 @@
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
-  color: #333;
+  color: #e2e8f0;
+  background: #0f172a;
   overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
   width: 100%;
+  background: #0f172a;
 }
 
 .App {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: #0f172a;
 }
 
 /* Smooth scrolling */
@@ -33,22 +36,22 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #1e293b;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  background: linear-gradient(135deg, #14b8a6, #06d6a0);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, #ff5252, #26d0ce);
+  background: linear-gradient(135deg, #0d9488, #059669);
 }
 
 /* Focus styles for accessibility */
 button:focus,
 a:focus {
-  outline: 2px solid #4ecdc4;
+  outline: 2px solid #14b8a6;
   outline-offset: 2px;
 }
 

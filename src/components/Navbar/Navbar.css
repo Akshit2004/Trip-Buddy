@@ -1,6 +1,8 @@
 .navbar {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(20, 184, 166, 0.2);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -17,14 +19,11 @@
 }
 
 .navbar-brand h2 {
-  color: white;
+  color: #14b8a6;
   margin: 0;
   font-size: 1.8rem;
   font-weight: bold;
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  text-shadow: 0 0 20px rgba(20, 184, 166, 0.5);
 }
 
 .navbar-menu {
@@ -34,7 +33,7 @@
 }
 
 .navbar-link {
-  color: white;
+  color: #e2e8f0;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -42,7 +41,8 @@
 }
 
 .navbar-link:hover {
-  color: #4ecdc4;
+  color: #14b8a6;
+  text-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
 }
 
 .navbar-link::after {
@@ -52,8 +52,9 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: #4ecdc4;
+  background: linear-gradient(90deg, #14b8a6, #06d6a0);
   transition: width 0.3s ease;
+  box-shadow: 0 0 10px rgba(20, 184, 166, 0.5);
 }
 
 .navbar-link:hover::after {
@@ -67,36 +68,40 @@
 }
 
 .btn-secondary {
-  background: transparent;
-  color: white;
-  border: 2px solid white;
+  background: rgba(20, 184, 166, 0.1);
+  color: #14b8a6;
+  border: 2px solid #14b8a6;
   padding: 0.5rem 1.5rem;
   border-radius: 25px;
   cursor: pointer;
   font-weight: 500;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .btn-secondary:hover {
-  background: white;
-  color: #667eea;
+  background: #14b8a6;
+  color: #0f172a;
+  box-shadow: 0 0 25px rgba(20, 184, 166, 0.4);
+  transform: translateY(-2px);
 }
 
 .btn-primary {
-  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
-  color: white;
+  background: linear-gradient(135deg, #14b8a6, #06d6a0);
+  color: #0f172a;
   border: none;
   padding: 0.5rem 1.5rem;
   border-radius: 25px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+  box-shadow: 0 8px 30px rgba(20, 184, 166, 0.5);
+  background: linear-gradient(135deg, #06d6a0, #14b8a6);
 }
 
 .navbar-toggle {
@@ -109,8 +114,9 @@
 .toggle-bar {
   width: 25px;
   height: 3px;
-  background: white;
+  background: #14b8a6;
   transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(20, 184, 166, 0.3);
 }
 
 @media (max-width: 768px) {
@@ -119,7 +125,9 @@
     top: 100%;
     left: 0;
     width: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(15, 23, 42, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(20, 184, 166, 0.2);
     flex-direction: column;
     padding: 2rem;
     transform: translateY(-100%);
