@@ -6,7 +6,7 @@ const Hero = () => {
   const navigate = useNavigate();
 
   const handlePlanTripClick = () => {
-    navigate('/plan');
+    navigate('/auth');
   };
 
   return (

@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './TripPlanner.css';
 import ItineraryDisplay from './components/ItineraryDisplay';
+import Sidebar from '../../components/Sidebar/Sidebar';
 import geminiService from '../../services/geminiService';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../firebase/config';
+import { useNavigate } from 'react-router-dom';
 
 const TripPlanner = () => {
+  const navigate = useNavigate();
+  
   const [formData, setFormData] = useState({
     destination: '',
     startDate: '',
@@ -17,6 +23,27 @@ const TripPlanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [errors, setErrors] = useState({});
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Function to handle sign out
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      // Clear any stored auth tokens
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      
+      // Redirect to home page
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   // Function to calculate end date from start date and duration
   const calculateEndDate = (startDate, duration) => {
@@ -113,11 +140,18 @@ const TripPlanner = () => {
 
   return (
     <div className="trip-planner">
-      <div className="container">
-        <div className="planner-header">
-          <h1>Plan Your Perfect Trip</h1>
-          <p>Fill out your travel preferences below, and our AI will create a personalized itinerary just for you.</p>
-        </div>
+      <Sidebar 
+        isCollapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+        onSignOut={handleSignOut}
+      />
+      
+      <div className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        <div className="container">
+          <div className="planner-header">
+            <h1>Plan Your Perfect Trip</h1>
+            <p>Fill out your travel preferences below, and our AI will create a personalized itinerary just for you.</p>
+          </div>
 
         <div className="form-container">
           {isLoading ? (
@@ -295,6 +329,7 @@ const TripPlanner = () => {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 };

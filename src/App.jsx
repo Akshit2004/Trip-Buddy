@@ -5,6 +5,7 @@ import Footer from './components/footer/Footer'
 import LandingPage from './pages/landing/LandingPage'
 import Login from './pages/auth/Login'
 import TripPlanner from './pages/trip-planner/TripPlanner'
+import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
 function App() {
@@ -20,7 +21,11 @@ function App() {
             </>
           } />
           <Route path="/auth" element={<Login />} />
-          <Route path="/plan" element={<TripPlanner />} />
+          <Route path="/plan" element={
+            <ProtectedRoute>
+              <TripPlanner />
+            </ProtectedRoute>
+          } />
         </Routes>
       </Router>
     </div>
