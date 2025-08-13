@@ -18,6 +18,7 @@ const Login = () => {
     return () => unsubscribe();
   }, [navigate]);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -33,6 +34,33 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
+
+  const switchToSignUp = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setError('');
+    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+    
+    setTimeout(() => {
+      setIsSignUp(true);
+      setTimeout(() => setIsAnimating(false), 300);
+    }, 300);
+  };
+
+  const switchToSignIn = () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setError('');
+    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
+    
+    setTimeout(() => {
+      setIsSignUp(false);
+      setTimeout(() => setIsAnimating(false), 300);
+    }, 300);
   };
 
   const handleSubmit = async (e) => {
@@ -69,28 +97,6 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const switchToSignUp = () => {
-    setIsSignUp(true);
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    });
-    setError('');
-  };
-
-  const switchToSignIn = () => {
-    setIsSignUp(false);
-    setFormData({
-      name: '',
-      email: '',
-      password: '',
-      confirmPassword: ''
-    });
-    setError('');
   };
 
   return (
@@ -131,23 +137,47 @@ const Login = () => {
       <div className="auth-container">
         <div className="auth-card">
           
-          {/* Sign In Form */}
-          <div className={`auth-form-container sign-in ${isSignUp ? 'inactive' : 'active'}`}>
-            <div className="form-content">
-              <h2 className="form-title">Welcome Back</h2>
-              <p className="form-subtitle">Sign in to continue your journey</p>
-              
-              <form onSubmit={handleSubmit} className="auth-form">
-                {error && !isSignUp && (
-                  <div className="error-message">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                      <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
-                      <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    {error}
-                  </div>
-                )}
+          {/* Toggle Indicator */}
+          <div className="auth-toggle">
+            <div className={`toggle-indicator ${isSignUp ? 'signup' : 'signin'}`}></div>
+            <button 
+              className={`toggle-btn ${!isSignUp ? 'active' : ''}`}
+              onClick={switchToSignIn}
+              disabled={isAnimating}
+            >
+              Sign In
+            </button>
+            <button 
+              className={`toggle-btn ${isSignUp ? 'active' : ''}`}
+              onClick={switchToSignUp}
+              disabled={isAnimating}
+            >
+              Sign Up
+            </button>
+          </div>
+
+          {/* Form Container */}
+          <div className={`auth-forms-wrapper ${isAnimating ? 'animating' : ''}`}>
+            
+            {/* Sign In Form */}
+            <div className={`auth-form-container sign-in ${isSignUp ? 'slide-out-left' : 'slide-in-right'}`}>
+              <div className="form-content">
+                <div className="form-header">
+                  <h2 className="form-title">Welcome Back</h2>
+                  <p className="form-subtitle">Sign in to continue your journey with Trip Buddy</p>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="auth-form">
+                  {error && !isSignUp && (
+                    <div className="error-message">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                        <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
+                        <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                      {error}
+                    </div>
+                  )}
 
                 <div className="input-group">
                   <div className="input-wrapper">
@@ -232,10 +262,12 @@ const Login = () => {
           </div>
 
           {/* Sign Up Form */}
-          <div className={`auth-form-container sign-up ${isSignUp ? 'active' : 'inactive'}`}>
+          <div className={`auth-form-container sign-up ${isSignUp ? 'slide-in-left' : 'slide-out-right'}`}>
             <div className="form-content">
-              <h2 className="form-title">Create Account</h2>
-              <p className="form-subtitle">Join us and start your adventure</p>
+              <div className="form-header">
+                <h2 className="form-title">Create Account</h2>
+                <p className="form-subtitle">Join us and start your adventure with Trip Buddy</p>
+              </div>
               
               <form onSubmit={handleSubmit} className="auth-form">
                 {error && isSignUp && (
@@ -366,6 +398,7 @@ const Login = () => {
             </div>
           </div>
 
+          </div> {/* Close auth-forms-wrapper */}
         </div>
       </div>
     </div>
