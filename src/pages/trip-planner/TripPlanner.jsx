@@ -23,7 +23,15 @@ const TripPlanner = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [errors, setErrors] = useState({});
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+
+  useEffect(() => {
+    const savedDestination = localStorage.getItem('destination');
+    if (savedDestination) {
+      setFormData(prev => ({ ...prev, destination: savedDestination }));
+      localStorage.removeItem('destination');
+    }
+  }, []);
 
   // Function to handle sign out
   const handleSignOut = async () => {
@@ -138,7 +146,7 @@ const TripPlanner = () => {
     );
   }
 
-  return (
+    return (
     <div className="trip-planner">
       <Sidebar 
         isCollapsed={sidebarCollapsed}

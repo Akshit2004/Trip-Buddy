@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../LandingPage.css';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [destination, setDestination] = useState('');
 
   const handlePlanTripClick = () => {
-    navigate('/auth');
+    if (destination.trim() !== '') {
+      localStorage.setItem('destination', destination);
+      navigate('/plan');
+    }
   };
 
   return (
@@ -41,6 +45,8 @@ const Hero = () => {
               type="text" 
               placeholder="Where do you want to go?" 
               className="destination-input"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
             />
             <button className="cta-button" onClick={handlePlanTripClick}>
               <span>Plan My Trip</span>
