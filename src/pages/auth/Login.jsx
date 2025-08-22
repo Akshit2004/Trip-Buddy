@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { auth, googleProvider } from '../../firebase/config';
-import { signInWithPopup } from 'firebase/auth';
+import {
+  signInWithPopup,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  onAuthStateChanged,
+} from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom';
 import './Login.css';
-
-import { onAuthStateChanged } from 'firebase/auth';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -73,14 +77,68 @@ const Login = () => {
         if (formData.password !== formData.confirmPassword) {
           throw new Error('Passwords do not match');
         }
-        // Handle sign up
-        console.log('Sign up:', formData);
+        // Create user with Firebase
+        if (formData.password.length < 6) {
+          throw new Error('Password should be at least 6 characters');
+        }
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          formData.password
+        );
+        // Set display name
+        try {
+          await updateProfile(userCredential.user, { displayName: formData.name });
+        } catch (updErr) {
+          // Non-fatal: continue even if updating profile fails
+          console.warn('updateProfile failed', updErr);
+        }
+        // Redirect after successful sign up
+        navigate('/plan', { replace: true });
       } else {
-        // Handle sign in
-        console.log('Sign in:', formData);
+        // Sign in with Firebase
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        navigate('/plan', { replace: true });
       }
     } catch (err) {
-      setError(err.message);
+      // Log full error for debugging (network error bodies, codes)
+      console.error('Authentication error:', err);
+
+      // Map common Firebase error codes to friendly messages
+      let message = 'Authentication failed. Please try again.';
+      if (err && err.code) {
+          switch (err.code) {
+            case 'auth/email-already-in-use':
+            case 'EMAIL_EXISTS':
+              message = 'An account with this email already exists. Try signing in.';
+              // If we're currently on the Sign Up form, switch to Sign In so the user can enter their password.
+              if (isSignUp) {
+                setIsSignUp(false);
+                // Clear password fields but keep email populated so it's easy to sign in.
+                setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
+              }
+              break;
+          case 'auth/invalid-email':
+          case 'INVALID_EMAIL':
+            message = 'Invalid email address.';
+            break;
+          case 'auth/weak-password':
+            message = 'Password should be at least 6 characters.';
+            break;
+          case 'auth/user-not-found':
+            message = 'No account found with this email.';
+            break;
+          case 'auth/wrong-password':
+            message = 'Incorrect password.';
+            break;
+          default:
+            message = err.message || message;
+        }
+      } else if (err && err.message) {
+        message = err.message;
+      }
+
+      setError(message);
     } finally {
       setIsLoading(false);
     }
