@@ -1,0 +1,68 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Feedback collection rules
+    match /feedbacks/{feedbackId} {
+      // Allow read access to approved feedbacks only
+      allow read: if resource.data.approved == true;
+      
+      // Allow create access for authenticated and unauthenticated users
+      allow create: if request.auth != null || true;
+      
+      // Allow update and delete only for authenticated admin users
+      allow update, delete: if request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    // Admin users collection (optional - for admin management)
+    match /admins/{adminId} {
+      // Only allow read/write access to admin users
+      allow read, write: if request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    // User-specific trip data (existing rules)
+    match /trips/{tripId} {
+      // Users can only access their own trips
+      allow read, write: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      
+      // Allow creation if user is authenticated and is creating their own trip
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId;
+    }
+    
+    // User profiles (optional - for storing user preferences)
+    match /users/{userId} {
+      // Users can only access their own profile
+      allow read, write: if request.auth != null && 
+        request.auth.uid == userId;
+    }
+    
+    // Public collections (read-only for all users)
+    match /destinations/{destinationId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    match /attractions/{attractionId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    // Analytics collection (write-only for the app, read for admins)
+    match /analytics/{analyticsId} {
+      allow create: if true; // Allow the app to create analytics data
+      allow read: if request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    // Default deny rule for any unmatched documents
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

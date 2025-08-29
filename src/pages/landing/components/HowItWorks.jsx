@@ -88,11 +88,6 @@ const HowItWorks = () => (
                     <div className="activity">🏙️ Tokyo Skytree</div>
                   </div>
                 </div>
-                <div className="quick-stats">
-                  <span>📍 12 places</span>
-                  <span>💰 $2,850 total</span>
-                  <span>⭐ 4.8 avg rating</span>
-                </div>
               </div>
             </div>
           </div>

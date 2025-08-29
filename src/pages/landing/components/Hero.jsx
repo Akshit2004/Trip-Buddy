@@ -55,21 +55,6 @@ const Hero = () => {
           </div>
           <p className="cta-note">Free to start</p>
         </div>
-        
-        <div className="hero-metrics">
-          <div className="metric">
-            <div className="metric-number">50K+</div>
-            <div className="metric-label">Happy Travelers</div>
-          </div>
-          <div className="metric">
-            <div className="metric-number">150+</div>
-            <div className="metric-label">Countries</div>
-          </div>
-          <div className="metric">
-            <div className="metric-number">4.9★</div>
-            <div className="metric-label">User Rating</div>
-          </div>
-        </div>
       </div>
       
       <div className="hero-visual">
