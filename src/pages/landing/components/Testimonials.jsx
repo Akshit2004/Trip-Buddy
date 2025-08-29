@@ -89,8 +89,8 @@ const Feedback = () => {
     <section className="feedback-section">
       <div className="container">
         <div className="feedback-header">
-          <h2>What Our Users Say</h2>
-          <p>Real feedback from real travelers</p>
+          <h2>What You Think About Us</h2>
+          <p>Your Feedback will help us improve our services</p>
         </div>
         
         <div className="feedback-content">
