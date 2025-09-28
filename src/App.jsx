@@ -1,9 +1,9 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Welcome from './Pages/landing/Welcome'
-import Login from './Pages/auth/Login'
-import Home from './Pages/Home'
-import Profile from './Pages/Profile'
+import Welcome from './pages/landing/Welcome'
+import Login from './pages/auth/Login'
+import Home from './pages/Home'
+import Profile from './pages/Profile'
 
 export default function App() {
   return (
