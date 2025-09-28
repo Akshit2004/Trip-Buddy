@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { createUserAccount, signInUser, setUserLanguage } from '../../firebase/userService'
+import { createUserAccount, signInUser, setUserLanguage, signInWithGoogle } from '../../firebase/userService'
 import AnimatedBlob from '../../Components/AnimatedBlob'
 
 export default function Login() {
@@ -118,8 +118,43 @@ export default function Login() {
   }
 
   const handleGoogleLogin = () => {
-    // Google login logic here
-    console.log('Google login clicked')
+    ;(async () => {
+      try {
+        setSubmitting(true)
+        const result = await signInWithGoogle()
+        if (result.success) {
+          // Persist language preference if available and navigate like email login
+          try {
+            const prefs = result.user.preferences || {}
+            if (prefs.language) {
+              localStorage.setItem('preferredLanguage', prefs.language)
+            }
+
+            const preLang = localStorage.getItem('preferredLanguage')
+            if (preLang && result.user.uid) {
+              if (!prefs.language || prefs.language !== preLang) {
+                await setUserLanguage(result.user.uid, preLang)
+              }
+            }
+          } catch (err) {
+            console.error('Error applying language preference after Google login:', err)
+          }
+
+          if (result.user.profileComplete) {
+            navigate('/home')
+          } else {
+            navigate('/welcome')
+          }
+        } else {
+          setErrors({ submit: result.error || 'Google sign-in failed' })
+        }
+      } catch (error) {
+        console.error('Google auth error:', error)
+        setErrors({ submit: 'Google sign-in failed. Please try again.' })
+      } finally {
+        setSubmitting(false)
+      }
+    })()
   }
 
   const disabled = submitting

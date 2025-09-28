@@ -1,5 +1,5 @@
 import { collection, addDoc, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth'
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { db, auth } from './config'
 
 // Collection name for users
@@ -279,5 +279,80 @@ export const setUserLanguage = async (uid, language) => {
   } catch (error) {
     console.error('Error setting user language:', error)
     return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Update user details (name, email, phone) in Firestore using merge
+ */
+export const setUserDetails = async (uid, details) => {
+  try {
+    if (!uid) throw new Error('No uid provided')
+
+    const payload = {
+      updatedAt: serverTimestamp(),
+      ...details
+    }
+
+    await setDoc(doc(db, USERS_COLLECTION, uid), payload, { merge: true })
+    return { success: true }
+  } catch (error) {
+    console.error('Error setting user details:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Sign in with Google (popup)
+ * Creates a Firestore user doc if missing.
+ */
+export const signInWithGoogle = async () => {
+  try {
+    const provider = new GoogleAuthProvider()
+    const result = await signInWithPopup(auth, provider)
+    const user = result.user
+
+    // Try to get Firestore user doc
+    const userDoc = await getDoc(doc(db, USERS_COLLECTION, user.uid))
+
+    if (userDoc.exists()) {
+      const userData = userDoc.data()
+      return {
+        success: true,
+        user: {
+          uid: user.uid,
+          name: userData.name || user.displayName || null,
+          email: userData.email || user.email || null,
+          profileComplete: userData.profileComplete || false,
+          preferences: userData.preferences || {}
+        },
+        message: 'Signed in with Google'
+      }
+    } else {
+      // Create basic user doc from Google profile
+      const basicUserData = {
+        uid: user.uid,
+        name: user.displayName || null,
+        email: user.email || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }
+      await setDoc(doc(db, USERS_COLLECTION, user.uid), basicUserData)
+
+      return {
+        success: true,
+        user: {
+          uid: user.uid,
+          name: basicUserData.name,
+          email: basicUserData.email,
+          preferences: {}
+        },
+        message: 'Signed in with Google'
+      }
+    }
+  } catch (error) {
+    console.error('Error signing in with Google:', error)
+    let errorMessage = error.message || 'Google sign-in failed'
+    return { success: false, error: errorMessage, code: error.code }
   }
 }

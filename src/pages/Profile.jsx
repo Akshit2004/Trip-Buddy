@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { auth } from '../firebase/config'
 import { signOut } from 'firebase/auth'
 import { getUserPreferences, setUserLanguage } from '../firebase/userService'
+import { submitSupportRequest } from '../firebase/supportService'
 import TopNav from '../Components/TopNav'
 import BottomNav from '../Components/BottomNav'
 
@@ -12,8 +13,13 @@ export default function Profile() {
   const currentLanguage = localStorage.getItem('preferredLanguage') || 'en'
   const [user, setUser] = useState(null)
   const [userPreferences, setUserPreferences] = useState(null)
+  const [userName, setUserName] = useState('')
   const [loading, setLoading] = useState(true)
   const [showLanguageModal, setShowLanguageModal] = useState(false)
+  const [showSupportModal, setShowSupportModal] = useState(false)
+  const [supportForm, setSupportForm] = useState({ subject: '', message: '' })
+  const [supportSubmitting, setSupportSubmitting] = useState(false)
+  const [supportResult, setSupportResult] = useState(null)
 
   // Language options
   const languages = [
@@ -42,6 +48,10 @@ export default function Profile() {
         const preferences = await getUserPreferences(currentUser.uid)
         if (preferences.success) {
           setUserPreferences(preferences.data)
+          // If Firestore has a name field, prefer it for display
+          if (preferences.name) {
+            setUserName(preferences.name)
+          }
         }
       } catch (error) {
         console.error('Error loading user data:', error)
@@ -52,6 +62,17 @@ export default function Profile() {
 
     loadUserData()
   }, [navigate])
+
+  // Auto-close support modal on successful submission
+  useEffect(() => {
+    if (supportResult?.success) {
+      const t = setTimeout(() => {
+        setShowSupportModal(false)
+        setSupportResult(null)
+      }, 1400)
+      return () => clearTimeout(t)
+    }
+  }, [supportResult])
 
   const handleLogout = async () => {
     try {
@@ -81,6 +102,41 @@ export default function Profile() {
       setShowLanguageModal(false)
     } catch (error) {
       console.error('Error updating language:', error)
+    }
+  }
+
+  const handleSupportInput = (e) => {
+    const { name, value } = e.target
+    setSupportForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const submitSupport = async () => {
+    try {
+      setSupportSubmitting(true)
+      setSupportResult(null)
+
+      const currentUser = auth.currentUser
+      const payload = {
+        uid: currentUser?.uid || null,
+        name: userName || userPreferences?.name || currentUser?.displayName || null,
+        email: currentUser?.email || null,
+        subject: supportForm.subject || 'General',
+        message: supportForm.message || ''
+      }
+
+  const res = await submitSupportRequest(payload)
+
+  if (res.success) {
+        setSupportResult({ success: true, id: res.id })
+        setSupportForm({ subject: '', message: '' })
+      } else {
+        setSupportResult({ success: false, error: res.error || 'Failed to submit' })
+      }
+    } catch (error) {
+      console.error('Support submit error:', error)
+      setSupportResult({ success: false, error: error.message })
+    } finally {
+      setSupportSubmitting(false)
     }
   }
 
@@ -114,7 +170,7 @@ export default function Profile() {
             
             {/* User Info */}
             <h2 className="text-2xl font-bold text-gray-800 mb-1">
-              {userPreferences?.name || user.displayName || 'User'}
+              {userName || userPreferences?.name || user.displayName || 'User'}
             </h2>
             <p className="text-gray-600 text-sm mb-4">
               {user.email}
@@ -219,7 +275,9 @@ export default function Profile() {
                 <p className="text-sm text-gray-600">Get help and contact support</p>
               </div>
             </div>
-            <i className="fas fa-chevron-right text-gray-400" aria-hidden="true" />
+            <button onClick={() => setShowSupportModal(true)} className="text-gray-400">
+              <i className="fas fa-chevron-right" aria-hidden="true" />
+            </button>
           </div>
 
           {/* About */}
@@ -282,6 +340,60 @@ export default function Profile() {
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Support Modal */}
+      {showSupportModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-md border border-white/50">
+            <div className="text-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Contact Support</h3>
+              <p className="text-gray-600 text-sm mt-1">Describe your issue and our team will get back to you.</p>
+            </div>
+
+            <div className="space-y-3">
+              <input
+                name="subject"
+                value={supportForm.subject}
+                onChange={handleSupportInput}
+                placeholder="Subject (optional)"
+                className="w-full p-3 border rounded-xl focus:outline-none"
+              />
+              <textarea
+                name="message"
+                value={supportForm.message}
+                onChange={handleSupportInput}
+                placeholder="How can we help you?"
+                rows={5}
+                className="w-full p-3 border rounded-xl focus:outline-none"
+              />
+
+              {supportResult?.success && (
+                <div className="text-green-600 text-sm">Thanks — your request was submitted.</div>
+              )}
+              {supportResult?.success === false && (
+                <div className="text-red-600 text-sm">Error: {supportResult.error}</div>
+              )}
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setShowSupportModal(false)}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-2xl"
+                  disabled={supportSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitSupport}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-2xl"
+                  disabled={supportSubmitting || !supportForm.message}
+                >
+                  {supportSubmitting ? 'Sending...' : 'Submit'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
