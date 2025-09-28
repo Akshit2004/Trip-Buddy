@@ -1,35 +1,16 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar/Navbar'
-import Footer from './components/footer/Footer'
-import LandingPage from './pages/landing/LandingPage'
-import Login from './pages/auth/Login'
-import TripPlanner from './pages/trip-planner/TripPlanner'
-import ProtectedRoute from './components/ProtectedRoute'
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Welcome from './Pages/landing/Welcome'
+import Login from './Pages/auth/Login'
 
-function App() {
+export default function App() {
   return (
-    <div className="App">
-      <Router>
-        <Routes>
-          <Route path="/" element={
-            <>
-              <Navbar />
-              <LandingPage />
-              <Footer />
-            </>
-          } />
-          <Route path="/auth" element={<Login />} />
-          <Route path="/plan" element={
-            <ProtectedRoute>
-              <TripPlanner />
-            </ProtectedRoute>
-          } />
-        </Routes>
-      </Router>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/welcome" element={<Welcome />} />
+        {/* Fallback route could redirect to root later */}
+      </Routes>
+    </BrowserRouter>
   )
 }
-
-export default App

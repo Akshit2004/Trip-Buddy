@@ -1,466 +1,142 @@
-import React, { useState, useEffect } from 'react';
-import { auth, googleProvider } from '../../firebase/config';
-import {
-  signInWithPopup,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile,
-  onAuthStateChanged,
-} from 'firebase/auth';
-import { Link, useNavigate } from 'react-router-dom';
-import './Login.css';
+import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 
-const Login = () => {
-  const navigate = useNavigate();
-  // Redirect to chat if already logged in
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        navigate('/plan', { replace: true });
-      }
-    });
-    return () => unsubscribe();
-  }, [navigate]);
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+// Animated Blob Component
+const AnimatedBlob = () => {
+  return (
+    <div className="relative w-32 h-32 mx-auto mb-8">
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-teal-500 to-blue-600 rounded-full animate-pulse opacity-75"></div>
+      <div className="absolute inset-2 bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-600 rounded-full animate-bounce opacity-80"></div>
+      <div className="absolute inset-6 bg-white rounded-full flex items-center justify-center shadow-inner">
+        <div className="text-2xl">✈️</div>
+      </div>
+    </div>
+  )
+}
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // Clear error when user starts typing
-    if (error) setError('');
-  };
+export default function Login() {
+  const navigate = useNavigate()
+  const [form, setForm] = useState({ email: '', password: '' })
+  const [errors, setErrors] = useState({})
+  const [submitting, setSubmitting] = useState(false)
 
-  const switchToSignUp = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setError('');
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    
-    setTimeout(() => {
-      setIsSignUp(true);
-      setTimeout(() => setIsAnimating(false), 300);
-    }, 300);
-  };
+  function validate(values) {
+    const e = {}
+    if (!values.email.trim()) e.email = 'Email is required'
+    if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)) {
+      e.email = 'Enter a valid email'
+    }
+    if (!values.password) e.password = 'Password is required'
+    if (values.password && values.password.length < 6) e.password = 'Min 6 characters'
+    return e
+  }
 
-  const switchToSignIn = () => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setError('');
-    setFormData({ name: '', email: '', password: '', confirmPassword: '' });
-    
-    setTimeout(() => {
-      setIsSignUp(false);
-      setTimeout(() => setIsAnimating(false), 300);
-    }, 300);
-  };
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setForm(f => ({ ...f, [name]: value }))
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    e.preventDefault()
+    const v = validate(form)
+    setErrors(v)
+    if (Object.keys(v).length) return
+    setSubmitting(true)
+    await new Promise(r => setTimeout(r, 900))
+    navigate('/welcome')
+  }
 
-    try {
-      if (isSignUp) {
-        if (formData.password !== formData.confirmPassword) {
-          throw new Error('Passwords do not match');
-        }
-        // Create user with Firebase
-        if (formData.password.length < 6) {
-          throw new Error('Password should be at least 6 characters');
-        }
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          formData.email,
-          formData.password
-        );
-        // Set display name
-        try {
-          await updateProfile(userCredential.user, { displayName: formData.name });
-        } catch (updErr) {
-          // Non-fatal: continue even if updating profile fails
-          console.warn('updateProfile failed', updErr);
-        }
-        // Redirect after successful sign up
-        navigate('/plan', { replace: true });
-      } else {
-        // Sign in with Firebase
-        await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        navigate('/plan', { replace: true });
-      }
-    } catch (err) {
-      // Log full error for debugging (network error bodies, codes)
-      console.error('Authentication error:', err);
+  const handleGoogleLogin = () => {
+    // Google login logic here
+    console.log('Google login clicked')
+  }
 
-      // Map common Firebase error codes to friendly messages
-      let message = 'Authentication failed. Please try again.';
-      if (err && err.code) {
-          switch (err.code) {
-            case 'auth/email-already-in-use':
-            case 'EMAIL_EXISTS':
-              message = 'An account with this email already exists. Try signing in.';
-              // If we're currently on the Sign Up form, switch to Sign In so the user can enter their password.
-              if (isSignUp) {
-                setIsSignUp(false);
-                // Clear password fields but keep email populated so it's easy to sign in.
-                setFormData((prev) => ({ ...prev, password: '', confirmPassword: '' }));
-              }
-              break;
-          case 'auth/invalid-email':
-          case 'INVALID_EMAIL':
-            message = 'Invalid email address.';
-            break;
-          case 'auth/weak-password':
-            message = 'Password should be at least 6 characters.';
-            break;
-          case 'auth/user-not-found':
-            message = 'No account found with this email.';
-            break;
-          case 'auth/wrong-password':
-            message = 'Incorrect password.';
-            break;
-          default:
-            message = err.message || message;
-        }
-      } else if (err && err.message) {
-        message = err.message;
-      }
-
-      setError(message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      await signInWithPopup(auth, googleProvider);
-      // Optionally redirect or show success
-    } catch (err) {
-      setError(err.message || 'Google sign-in failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const disabled = submitting
 
   return (
-    <div className="auth-page">
-      {/* Background Elements */}
-      <div className="auth-background">
-        <div className="floating-shapes">
-          <div className="shape shape-1"></div>
-          <div className="shape shape-2"></div>
-          <div className="shape shape-3"></div>
-          <div className="shape shape-4"></div>
-          <div className="shape shape-5"></div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="auth-nav">
-        <Link to="/" className="auth-logo">
-          <div className="logo-icon">
-            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3 17L12 22L21 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M3 12L12 17L21 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </div>
-          <span>Trip Buddy</span>
-        </Link>
-        <Link to="/" className="back-home">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Back to Home
-        </Link>
-      </nav>
-
-      {/* Main Content */}
-      <div className="auth-container">
-        <div className="auth-card">
-          
-          {/* Toggle Indicator */}
-          <div className="auth-toggle">
-            <div className={`toggle-indicator ${isSignUp ? 'signup' : 'signin'}`}></div>
-            <button 
-              className={`toggle-btn ${!isSignUp ? 'active' : ''}`}
-              onClick={switchToSignIn}
-              disabled={isAnimating}
-            >
-              Sign In
-            </button>
-            <button 
-              className={`toggle-btn ${isSignUp ? 'active' : ''}`}
-              onClick={switchToSignUp}
-              disabled={isAnimating}
-            >
-              Sign Up
-            </button>
-          </div>
-
-          {/* Form Container */}
-          <div className={`auth-forms-wrapper ${isAnimating ? 'animating' : ''}`}>
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-10 bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-100">
+      <div className="w-full max-w-md space-y-6">
+        {/* Animated Blob */}
+        <AnimatedBlob />
+        
+        {/* Login Form */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/50">
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+            {/* Email Field */}
+            <div className="space-y-2">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                value={form.email}
+                onChange={handleChange}
+                className={`w-full rounded-2xl px-6 py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
+                placeholder="Email"
+                disabled={disabled}
+              />
+              {errors.email && <p className="text-xs text-red-500 ml-2">{errors.email}</p>}
+            </div>
             
-            {/* Sign In Form */}
-            <div className={`auth-form-container sign-in ${isSignUp ? 'slide-out-left' : 'slide-in-right'}`}>
-              <div className="form-content">
-                <div className="form-header">
-                  <h2 className="form-title">Welcome Back</h2>
-                  <p className="form-subtitle">Sign in to continue your journey with Trip Buddy</p>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="auth-form">
-                  {error && !isSignUp && (
-                    <div className="error-message">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                        <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
-                        <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
-                      </svg>
-                      {error}
-                    </div>
-                  )}
-
-                <div className="input-group">
-                  <div className="input-wrapper">
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2"/>
-                      <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Email address"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <div className="input-wrapper">
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                      <circle cx="12" cy="16" r="1" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M7 11V7A5 5 0 0 1 17 7V11" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="Password"
-                      required
-                      autoComplete={isSignUp ? "new-password" : "current-password"}
-                    />
-                  </div>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className={`auth-btn primary ${isLoading ? 'loading' : ''}`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="spinner"></div>
-                  ) : (
-                    <>
-                      Sign In
-                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 5L19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </>
-                  )}
-                </button>
-
-                <div className="divider">
-                  <span>or</span>
-                </div>
-
-                <button 
-                  type="button" 
-                  onClick={handleGoogleAuth}
-                  className="auth-btn google"
-                >
-                  <svg className="google-icon" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Continue with Google
-                </button>
-
-                <p className="switch-text">
-                  Don't have an account? 
-                  <button type="button" onClick={switchToSignUp} className="switch-btn">
-                    Sign up here
-                  </button>
-                </p>
-              </form>
+            {/* Password Field */}
+            <div className="space-y-2">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                value={form.password}
+                onChange={handleChange}
+                className={`w-full rounded-2xl px-6 py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.password ? 'border-red-400' : 'border-gray-200'}`}
+                placeholder="Password"
+                disabled={disabled}
+              />
+              {errors.password && <p className="text-xs text-red-500 ml-2">{errors.password}</p>}
             </div>
+            
+            {/* Login Button */}
+            <button
+              type="submit"
+              disabled={disabled}
+              className="relative w-full bg-gradient-to-r from-cyan-500 via-teal-500 to-blue-600 hover:from-cyan-600 hover:via-teal-600 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 transition-all duration-300 transform hover:scale-105"
+            >
+              {submitting && <span className="absolute left-4 h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+              <span>{submitting ? 'Signing in...' : 'Login'}</span>
+            </button>
+          </form>
+          
+          {/* Sign Up Link */}
+          <div className="text-center mt-6">
+            <span className="text-gray-600">Not a user? </span>
+            <Link to="/signup" className="font-semibold text-teal-600 hover:text-teal-700 hover:underline transition-colors">
+              Sign up
+            </Link>
           </div>
-
-          {/* Sign Up Form */}
-          <div className={`auth-form-container sign-up ${isSignUp ? 'slide-in-left' : 'slide-out-right'}`}>
-            <div className="form-content">
-              <div className="form-header">
-                <h2 className="form-title">Create Account</h2>
-                <p className="form-subtitle">Join us and start your adventure with Trip Buddy</p>
-              </div>
-              
-              <form onSubmit={handleSubmit} className="auth-form">
-                {error && isSignUp && (
-                  <div className="error-message">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                      <line x1="15" y1="9" x2="9" y2="15" stroke="currentColor" strokeWidth="2"/>
-                      <line x1="9" y1="9" x2="15" y2="15" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    {error}
-                  </div>
-                )}
-
-                <div className="input-group">
-                  <div className="input-wrapper">
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2"/>
-                      <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="Full name"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <div className="input-wrapper">
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2"/>
-                      <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="Email address"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <div className="input-wrapper">
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                      <circle cx="12" cy="16" r="1" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M7 11V7A5 5 0 0 1 17 7V11" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="Password"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="input-group">
-                  <div className="input-wrapper">
-                    <svg className="input-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                      <circle cx="12" cy="16" r="1" stroke="currentColor" strokeWidth="2"/>
-                      <path d="M7 11V7A5 5 0 0 1 17 7V11" stroke="currentColor" strokeWidth="2"/>
-                    </svg>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      placeholder="Confirm password"
-                      required
-                      autoComplete="new-password"
-                    />
-                  </div>
-                </div>
-
-                <button 
-                  type="submit" 
-                  className={`auth-btn primary ${isLoading ? 'loading' : ''}`}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="spinner"></div>
-                  ) : (
-                    <>
-                      Create Account
-                      <svg className="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M12 5L19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </>
-                  )}
-                </button>
-
-                <div className="divider">
-                  <span>or</span>
-                </div>
-
-                <button 
-                  type="button" 
-                  onClick={handleGoogleAuth}
-                  className="auth-btn google"
-                >
-                  <svg className="google-icon" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Continue with Google
-                </button>
-
-                <p className="switch-text">
-                  Already have an account? 
-                  <button type="button" onClick={switchToSignIn} className="switch-btn">
-                    Sign in here
-                  </button>
-                </p>
-              </form>
-            </div>
+          
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="mx-4 text-gray-500 text-sm">or</span>
+            <div className="flex-1 border-t border-gray-300"></div>
           </div>
-
-          </div> {/* Close auth-forms-wrapper */}
+          
+          {/* Google Login */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={disabled}
+            className="w-full bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-md text-gray-700 font-medium px-8 py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
+          </button>
         </div>
       </div>
     </div>
-  );
-};
-
-export default Login;
+  )
+}

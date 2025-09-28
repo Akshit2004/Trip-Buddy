@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700;900&amp;family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --primary-color: #13a4ec;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-gray-50 font-['Plus_Jakarta_Sans',_sans-serif]">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-white justify-between group/design-root overflow-x-hidden">
+<div class="flex flex-col flex-1">
+<div class="flex items-center bg-white p-4 pb-3 justify-between sticky top-0 z-10">
+<div class="text-slate-800 flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100" data-icon="ArrowLeft" data-size="24px" data-weight="regular">
+<svg fill="currentColor" height="24px" viewBox="0 0 256 256" width="24px" xmlns="http://www.w3.org/2000/svg">
+<path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+</svg>
+</div>
+<h2 class="text-slate-800 text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-10">My Trips</h2>
+</div>
+<div class="flex-1 overflow-y-auto px-4 pt-2 pb-4 space-y-4 bg-gray-50">
+<div class="p-4 bg-orange-100/50 border border-orange-200/80 rounded-2xl">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-orange-500 text-2xl mt-0.5">error</span>
+<div class="flex-1">
+<p class="text-orange-600 text-base font-bold leading-tight">Flight Cancelled: Crew Shortage</p>
+<p class="text-orange-500 text-sm font-normal leading-normal mt-1">Your flight from Mumbai to Goa has been cancelled due to unforeseen crew shortages.</p>
+<div class="mt-3 bg-white p-3 rounded-lg border border-slate-200/60">
+<p class="text-slate-500 text-xs font-medium">STATUS</p>
+<p class="text-slate-800 font-bold text-sm"><span class="text-red-600">Cancelled</span></p>
+</div>
+</div>
+</div>
+<div class="mt-4 space-y-3">
+<button class="w-full flex items-center justify-center gap-2 text-center text-sm font-bold bg-blue-500 text-white rounded-full py-3 px-4">
+<span class="material-symbols-outlined">flight_takeoff</span>
+<span>Rebook on next available flight</span>
+</button>
+<button class="w-full flex items-center justify-center gap-2 text-center text-sm font-bold bg-white border border-slate-200/80 text-slate-700 rounded-full py-3 px-4">
+<span class="material-symbols-outlined">train</span>
+<span>Explore train alternatives</span>
+</button>
+<button class="w-full flex items-center justify-center gap-2 text-center text-sm font-bold bg-white border border-slate-200/80 text-slate-700 rounded-full py-3 px-4">
+<span class="material-symbols-outlined">directions_bus</span>
+<span>Find bus options</span>
+</button>
+<button class="w-full flex items-center justify-center gap-2 text-center text-sm font-bold bg-white border border-slate-200/80 text-slate-700 rounded-full py-3 px-4">
+<span class="material-symbols-outlined">support_agent</span>
+<span>Contact support</span>
+</button>
+</div>
+<p class="text-center text-slate-500 text-xs mt-4 underline">Request a full refund</p>
+</div>
+<div class="flex items-center justify-between gap-4 rounded-xl bg-white p-3 shadow-sm shadow-slate-100">
+<div class="flex flex-col gap-1">
+<p class="text-slate-500 text-xs font-medium">Upcoming</p>
+<p class="text-slate-800 text-base font-bold leading-tight">Delhi to Mumbai</p>
+<p class="text-slate-500 text-sm font-normal">Flight · 12:30 PM</p>
+</div>
+<div class="w-20 h-20 bg-center bg-no-repeat bg-cover rounded-lg flex-shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBy2GrHatLskvAq-q4fuo3HCiQzXopOwPDz30vRv-95V3Am1tajZFB6szrE1KakDA1nb048W5pprzzu9TiE3eYtKFDlExy4DZGwRrqbn4Y-GFLnlflfCbb4P5D6oz0HXeLdqcUcD6LTgjQga8hCznmAne9G45d3vxj2dUXxXF00sPhkybTNcVAuWUT6oArOJaiTU1PcDj-l1ItBP6kBjgx59_E7gSr4g1Azkts965zGGH1_nl0v3BT9n-xMIVSoSYn3WhDaI4yzhcZE");'></div>
+</div>
+<div class="flex items-center justify-between gap-4 rounded-xl bg-white p-3 shadow-sm shadow-slate-100 ring-2 ring-orange-400">
+<div class="flex flex-col gap-1">
+<p class="text-orange-500 text-xs font-medium">Disrupted</p>
+<p class="text-slate-800 text-base font-bold leading-tight">Mumbai to Goa</p>
+<p class="text-slate-500 text-sm font-normal">Flight · <span class="line-through">04:00 PM</span> <span class="text-red-500 font-medium">Cancelled</span></p>
+</div>
+<div class="w-20 h-20 bg-center bg-no-repeat bg-cover rounded-lg flex-shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD38W7deuXfuhCXwFeaMEzE9j5gGPpMjXP5Xarnpebhk6MnLbrQOxOnmdCjS-aAUr3AUhuAMXYGM-S8mlyiwdWo3TBIRRZaYC_4q_NUI3ZVHCOkt71GXsGsAXM05sKLqy7P6gDqAE33gkIQhYJLAHOCdtPVpDro7oxyoIgIz7hDA_On7gWjH7RH7TWTmGHeiQXR0Ef2Y61NgsbVx3U4BG2InvsuJLbcZoT-smMxSjpbnDQ_kDIUMPyRM71CTiYlhKLzCCvHy14wH3AX");'></div>
+</div>
+<div class="flex items-center justify-between gap-4 rounded-xl bg-white p-3 shadow-sm shadow-slate-100">
+<div class="flex flex-col gap-1">
+<p class="text-slate-500 text-xs font-medium">Upcoming</p>
+<p class="text-slate-800 text-base font-bold leading-tight">Goa to Delhi</p>
+<p class="text-slate-500 text-sm font-normal">Flight · 12:30 PM</p>
+</div>
+<div class="w-20 h-20 bg-center bg-no-repeat bg-cover rounded-lg flex-shrink-0" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDMoK3ZVuiKOEOw8OngBGxm9FXlG9bY9ckadEvSCWT6MVlYbYeS5PMakS6iFLYJ5BxgQoP9xx926-Z6AtJ837s6YRprdMdfaYraqbC5UFg2ggeM8AxgbfbclTwj5LfJIiC5tO8z3MHwyeU5iKKzw3JgNlDBK9yi3qhRAC0E0mtBFy9DMcg9F2sVUMM5MEnxX8z3VdhKm6yeQQqhdOxaIDvxW8nSGza7UnS1jGTlCuKydLatv481nG4Gdx5T0fYkSY0A_IhjMvOW2sjR");'></div>
+</div>
+</div>
+</div>
+<div class="sticky bottom-0 bg-white">
+<div class="flex justify-around border-t border-slate-200/80 px-2 py-2">
+<a class="flex flex-col items-center justify-end gap-1 text-slate-500 w-1/4 py-1" href="#">
+<span class="material-symbols-outlined text-2xl">home</span>
+<p class="text-xs font-medium">Home</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-blue-500 w-1/4 py-1 rounded-full bg-blue-50" href="#">
+<span class="material-symbols-outlined text-2xl">flight_takeoff</span>
+<p class="text-xs font-bold">My Trips</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-slate-500 w-1/4 py-1" href="#">
+<span class="material-symbols-outlined text-2xl">inbox</span>
+<p class="text-xs font-medium">Inbox</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-slate-500 w-1/4 py-1" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<p class="text-xs font-medium">Profile</p>
+</a>
+</div>
+<div class="h-3 bg-white"></div>
+</div>
+</div>
+
+</body></html>

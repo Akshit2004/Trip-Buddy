@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nearby Attractions &amp; Restaurants</title>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link as="style" href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Plus+Jakarta+Sans%3Awght%40400%3B500%3B700%3B800" onload="this.rel='stylesheet'" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+        :root {
+            --primary-color: #13a4ec;
+            --secondary-color: #0d84c3;
+            --text-primary: #111618;
+            --text-secondary: #617c89;
+            --background-primary: #ffffff;
+            --background-secondary: #f0f3f4;
+            --teal-color: #008080;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+            font-family: "Plus Jakarta Sans", "Noto Sans", sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[var(--background-secondary)]">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root">
+<header class="sticky top-0 z-20 bg-white shadow-sm">
+<div class="flex items-center p-4">
+<button class="text-[var(--text-primary)]">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="flex-1 text-center text-lg font-bold text-[var(--text-primary)]">Explore Nearby</h1>
+<button class="text-[var(--text-primary)]">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+<div class="flex border-b border-gray-200">
+<button class="flex-1 py-3 text-center text-sm font-medium text-[var(--primary-color)] border-b-2 border-[var(--primary-color)]">Attractions</button>
+<button class="flex-1 py-3 text-center text-sm font-medium text-[var(--text-secondary)]">Restaurants</button>
+</div>
+</header>
+<main class="flex-grow p-4">
+<div class="overflow-x-auto pb-4 [-ms-scrollbar-style:none] [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
+<div class="flex space-x-3">
+<button class="flex items-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[var(--text-secondary)]">
+<span class="material-symbols-outlined !text-base">tune</span>
+                        Filters
+                    </button>
+<button class="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[var(--text-secondary)]">By Type</button>
+<button class="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[var(--text-secondary)]">Rating</button>
+<button class="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[var(--text-secondary)]">Distance</button>
+<button class="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-[var(--text-secondary)]">Price Range</button>
+</div>
+</div>
+<div class="space-y-4">
+<div class="rounded-xl bg-white p-3 shadow-sm">
+<div class="flex items-start gap-4">
+<img alt="Amer Fort" class="h-24 w-24 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFS56jEQKLzlD6j6CAL-exeeaN7vtFGStiamzTluyeEghygf-6D11lgoQTkoEVWPTFgSnld3ALMfI_AIaeM65Zw28QSpuhArSdY98z4hi00R2dNyytvi-SgOtZKpbBtrB_eX1R0Ow1Iv1LUcLzg2MWZdLFRPN4xLFB4-cU3moT7CQPwUIjYsr9ss_zi7s-txEk5nzKOiG114zcR07FbnMIE5ykSvotZgiXbIf3lRmMTLxGOmJSahnScqQq2JaPFpvQLwZWdDdEekzB"/>
+<div class="flex-1">
+<h2 class="text-base font-bold text-[var(--text-primary)]">Amer Fort</h2>
+<p class="text-sm text-[var(--text-secondary)]">Majestic hill fort</p>
+<div class="mt-2 flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+<span class="material-symbols-outlined !text-base text-yellow-500">star</span>
+<span>4.6</span>
+<span class="mx-1">•</span>
+<span>2 km</span>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-white p-3 shadow-sm">
+<div class="flex items-start gap-4">
+<img alt="Hawa Mahal" class="h-24 w-24 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABysZ8fkcG8lZxJzAroycIWWSHMifN23IKfZNpEC_oce7HaKf1HMo_cpWRPxUhhF3tl_iruIuUszusZpnJTwOVa-OWsxONa-tSY2bTeDooV5b-GoG5TjaUbGsFEFuzktx3Czptj_6YZjKvzs2Ie2sSud6huOOzkum1Og_sXk6UVpS0-xtHhwm7U7Dyxz36y7asioYIfmoYPXGUksUYFHjMdU3loKk5GgZDFUOU3fxX6o02ozDHcwVt1QRsIVrC2O37J9ABTUo9-Vcr"/>
+<div class="flex-1">
+<h2 class="text-base font-bold text-[var(--text-primary)]">Hawa Mahal</h2>
+<p class="text-sm text-[var(--text-secondary)]">Iconic palace of winds</p>
+<div class="mt-2 flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+<span class="material-symbols-outlined !text-base text-yellow-500">star</span>
+<span>4.7</span>
+<span class="mx-1">•</span>
+<span>3.5 km</span>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-white p-3 shadow-sm">
+<div class="flex items-start gap-4">
+<img alt="City Palace" class="h-24 w-24 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOj0dOw89n7jpxzHK1en9Z5L1i2e4JWFflRhbQffFb-5_O216vVHt3KrRTCPgTkcEuLDEaUyP0dbFwLnwGbrdMkPFbYM6C3PZFcqkEEIY3phG_g5VF9E7EtQRe4hq42PfwxeFCsJVTZEeVHsqyZa0Q5W7HM8Q0oVuMd2rznIFf2PTpNefAXFxytmQCmBicbAPmw7fpgX0gpoyqgkYn1USVVvvVlmTcKBULlEP20EjDBhPH1LXeLPH2SUHILRxvUl1e5uMNxdvvmoQ7"/>
+<div class="flex-1">
+<h2 class="text-base font-bold text-[var(--text-primary)]">City Palace</h2>
+<p class="text-sm text-[var(--text-secondary)]">Royal residence complex</p>
+<div class="mt-2 flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+<span class="material-symbols-outlined !text-base text-yellow-500">star</span>
+<span>4.5</span>
+<span class="mx-1">•</span>
+<span>4 km</span>
+</div>
+</div>
+</div>
+</div>
+<div class="rounded-xl bg-white p-3 shadow-sm">
+<div class="flex items-start gap-4">
+<img alt="Jantar Mantar" class="h-24 w-24 rounded-lg object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3GYNbzbo8UVUk29y8La--CWgGQqDnU9pP7O4TMvyiNaVJEJp9Vq_vlSiS6uqHnnK2ivdjioDDhLjjbQNof5c2XlAknZ33DXSnOXtoLdxpU6Vv2Nz41uS56rh8bXNN2uwI_S_dkL_BEQrYB0V-CUTTVQgaX86F3vecgAotKl-2Z2Xw0EyKETvSHIKcT8trtyiCma7dez_5UOk1lRCLy805jPNC70oH5Q1Jlz4sgHO79SBsPIO4EUZZnm84n8SRznHbTYAuAM3dpg1z"/>
+<div class="flex-1">
+<h2 class="text-base font-bold text-[var(--text-primary)]">Jantar Mantar</h2>
+<p class="text-sm text-[var(--text-secondary)]">Astronomical observatory</p>
+<div class="mt-2 flex items-center gap-1 text-sm text-[var(--text-secondary)]">
+<span class="material-symbols-outlined !text-base text-yellow-500">star</span>
+<span>4.6</span>
+<span class="mx-1">•</span>
+<span>4.2 km</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-8 text-center">
+<button class="w-full rounded-xl bg-[var(--primary-color)] h-12 text-white font-bold tracking-wide hover:bg-[var(--secondary-color)] transition-colors">
+                    Load More
+                </button>
+</div>
+</main>
+<footer class="sticky bottom-0 bg-white shadow-[0_-2px_5px_rgba(0,0,0,0.05)]">
+<nav class="flex justify-around py-2">
+<a class="flex flex-col items-center justify-end gap-1 text-[var(--primary-color)]" href="#">
+<span class="material-symbols-outlined">explore</span>
+<p class="text-xs font-medium">Explore</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-[var(--text-secondary)]" href="#">
+<span class="material-symbols-outlined">work</span>
+<p class="text-xs font-medium">My Trips</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-[var(--text-secondary)]" href="#">
+<span class="material-symbols-outlined">inbox</span>
+<p class="text-xs font-medium">Inbox</p>
+</a>
+<a class="flex flex-col items-center justify-end gap-1 text-[var(--text-secondary)]" href="#">
+<span class="material-symbols-outlined">person</span>
+<p class="text-xs font-medium">Profile</p>
+</a>
+</nav>
+</footer>
+</div>
+
+</body></html>

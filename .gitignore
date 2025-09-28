@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 
+# Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,6 +23,46 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment files
+# Node
+node_modules/
+package-lock.json
+pnpm-lock.yaml
+
+# Vite / build
+dist/
+.vite/
+.cache/
+
+# env
 .env
-.env.*
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDE files
+*.iml
+
+# TypeScript
+*.tsbuildinfo
+
+# Tailwind JIT cache
+/.tailwindcache
+
+# ESLint
+.eslintcache
+
+# Logs and debug
+logs/
+*.log
+npm-debug.log*
+
+# Generated static assets
+public/build/
+
+# Temporary files
+tmp/
+temp/
+

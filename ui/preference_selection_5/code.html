@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stitch Design</title>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style type="text/tailwindcss">
+    :root {
+      --primary-color: #13a4ec;
+      --soft-blue: #E0F7FA;
+      --teal: #00897B;
+      --white: #FFFFFF;
+      --grey: #F0F3F4;
+      --dark-grey: #6B7280;
+      --text-primary: #111618;
+    }
+    .material-symbols-outlined {
+      font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24
+    }
+  </style>
+<style>
+      body {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[var(--grey)]">
+<div class="relative flex flex-col h-auto min-h-screen w-full overflow-x-hidden">
+<div class="flex-grow flex flex-col items-center justify-center p-4 text-center">
+<div class="bg-[var(--soft-blue)] rounded-full p-5 mb-6">
+<span class="material-symbols-outlined text-[var(--primary-color)] text-6xl">check_circle</span>
+</div>
+<h1 class="text-2xl font-bold text-[var(--text-primary)] mb-2">Booking Successful!</h1>
+<p class="text-[var(--dark-grey)] mb-6">Your ticket has been booked successfully.</p>
+<div class="bg-white rounded-2xl shadow-sm p-6 w-full max-w-sm space-y-6">
+<div class="flex flex-col items-center">
+<p class="text-sm text-[var(--dark-grey)]">Your PNR Number</p>
+<p class="text-2xl font-bold text-[var(--text-primary)] tracking-widest">A1B2C3D4</p>
+</div>
+<div class="flex justify-center">
+<img alt="QR Code" class="w-40 h-40" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBa5JmA5PhDA6cxq0td1hOuxaa_ESjelnr3g66LPHr4sPMgtXFhfhUHEZdyNpRIBHcm7-XsSm_gzvkieCdJ9f0ysjoUOWFuutlIw6KkXpz9ARh3y1rr20aMjgCQh06uaNclPZMo9wCUM8gR_L3_fnrGOqCw62g6pG1zNBcO09Jp-SuX44-szcksPCe-islBe8RamojKXj2UHt_RWOVMJd_aO8taB7Lx8em0x4XRFWNonSh81Mf6jJtW3pxol49iCMmpk9bF5kkKD8UQ"/>
+</div>
+<p class="text-sm text-[var(--dark-grey)]">Show this QR code at the counter for easy access.</p>
+</div>
+</div>
+<div class="sticky bottom-0 w-full p-4 bg-white">
+<button class="w-full flex items-center justify-center gap-3 rounded-full bg-[#25D366] py-4 px-6 text-white font-bold text-lg">
+<svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.35 3.45 16.86L2.05 22L7.3 20.55C8.77 21.33 10.37 21.79 12.04 21.79C17.5 21.79 21.95 17.34 21.95 11.88C21.95 6.42 17.5 2 12.04 2ZM12.04 20.13C10.56 20.13 9.12 19.72 7.9 18.99L7.54 18.78L4.85 19.46L5.54 16.86L5.33 16.5C4.52 15.19 4.09 13.58 4.09 11.91C4.09 7.56 7.69 4.03 12.04 4.03C16.39 4.03 19.99 7.56 19.99 11.88C19.99 16.23 16.39 20.13 12.04 20.13ZM17.48 14.49C17.21 14.22 16.42 13.82 16.19 13.73C15.96 13.64 15.8 13.6 15.65 13.87C15.49 14.14 14.98 14.73 14.82 14.9C14.67 15.07 14.52 15.09 14.25 15C13.98 14.91 12.98 14.59 11.83 13.59C10.91 12.79 10.32 11.84 10.15 11.57C9.98 11.3 10.11 11.17 10.25 11.03C10.38 10.9 10.54 10.68 10.69 10.5C10.84 10.32 10.89 10.21 11.01 9.97C11.13 9.73 11.08 9.53 11 9.38C10.92 9.23 10.42 7.97 10.22 7.48C10.02 7 9.82 7.04 9.68 7.03H9.37C9.21 7.03 8.94 7.12 8.71 7.39C8.48 7.66 7.82 8.25 7.82 9.45C7.82 10.65 8.74 11.79 8.89 11.96C9.04 12.13 10.43 14.42 12.73 15.34C14.54 16.08 15.05 15.92 15.54 15.87C15.98 15.82 16.92 15.26 17.15 14.66C17.38 14.07 17.38 13.58 17.3 13.49C17.22 13.4 17.07 13.34 16.8 13.25L17.48 14.49Z"></path></svg>
+<span>Share via WhatsApp</span>
+</button>
+</div>
+</div>
+
+</body></html>
