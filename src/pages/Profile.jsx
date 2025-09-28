@@ -1,0 +1,292 @@
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { auth } from '../firebase/config'
+import { signOut } from 'firebase/auth'
+import { getUserPreferences, setUserLanguage } from '../firebase/userService'
+import TopNav from '../Components/TopNav'
+import BottomNav from '../Components/BottomNav'
+
+export default function Profile() {
+  const navigate = useNavigate()
+  // translation logic removed — app uses static UI labels
+  const currentLanguage = localStorage.getItem('preferredLanguage') || 'en'
+  const [user, setUser] = useState(null)
+  const [userPreferences, setUserPreferences] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [showLanguageModal, setShowLanguageModal] = useState(false)
+
+  // Language options
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'es', name: 'Español', flag: '🇪🇸' },
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'it', name: 'Italiano', flag: '🇮🇹' },
+    { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+    { code: 'zh', name: '中文', flag: '🇨🇳' },
+    { code: 'ja', name: '日本語', flag: '🇯🇵' },
+  ]
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const currentUser = auth.currentUser
+        if (!currentUser) {
+          navigate('/') // Redirect to login if not authenticated
+          return
+        }
+
+        setUser(currentUser)
+        
+        // Load user preferences from Firestore
+        const preferences = await getUserPreferences(currentUser.uid)
+        if (preferences.success) {
+          setUserPreferences(preferences.data)
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUserData()
+  }, [navigate])
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      localStorage.removeItem('preferredLanguage') // Clear local storage
+      navigate('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
+  }
+
+  const handleLanguageChange = async (langCode) => {
+    try {
+      const currentUser = auth.currentUser
+      if (currentUser) {
+        const result = await setUserLanguage(currentUser.uid, langCode)
+        if (result.success) {
+          // Update local preferences
+          setUserPreferences(prev => ({
+            ...prev,
+            language: langCode
+          }))
+          // Also update localStorage for immediate use
+          localStorage.setItem('preferredLanguage', langCode)
+        }
+      }
+      setShowLanguageModal(false)
+    } catch (error) {
+      console.error('Error updating language:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-100">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null // Will redirect to login
+  }
+
+  const currentLang = languages.find(lang => lang.code === (userPreferences?.language || currentLanguage || 'en'))
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-100">
+      <TopNav />
+      
+      {/* Main Content */}
+      <div className="pt-20 pb-28 px-4 max-w-md mx-auto">
+        {/* Profile Header */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-white/50 mb-6">
+          <div className="text-center">
+            {/* Avatar */}
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <i className="fas fa-user text-white text-3xl" aria-hidden="true" />
+            </div>
+            
+            {/* User Info */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+              {userPreferences?.name || user.displayName || 'User'}
+            </h2>
+            <p className="text-gray-600 text-sm mb-4">
+              {user.email}
+            </p>
+            
+            {/* Stats Row */}
+            <div className="grid grid-cols-3 gap-4 py-4 border-t border-gray-200">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">0</p>
+                <p className="text-xs text-gray-600">Trips</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">0</p>
+                  <p className="text-xs text-gray-600">Countries</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-purple-600">0</p>
+                  <p className="text-xs text-gray-600">Reviews</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Settings Section */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-white/50 mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Settings</h3>
+          
+          {/* Language Setting */}
+          <button 
+            onClick={() => setShowLanguageModal(true)}
+            className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <i className="fas fa-globe text-blue-600" aria-hidden="true" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">Language</p>
+                <p className="text-sm text-gray-600">{currentLang?.flag} {currentLang?.name}</p>
+              </div>
+            </div>
+            <i className="fas fa-chevron-right text-gray-400" aria-hidden="true" />
+          </button>
+
+          {/* Notifications Setting */}
+          <div className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                <i className="fas fa-bell text-yellow-600" aria-hidden="true" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">Notifications</p>
+                <p className="text-sm text-gray-600">Push notifications & updates</p>
+              </div>
+            </div>
+            <div className="w-12 h-6 bg-blue-500 rounded-full p-1 transition-colors duration-200">
+              <div className="w-4 h-4 bg-white rounded-full transform translate-x-6 transition-transform duration-200"></div>
+            </div>
+          </div>
+
+          {/* Theme Setting */}
+          <div className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <i className="fas fa-palette text-purple-600" aria-hidden="true" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">Theme</p>
+                <p className="text-sm text-gray-600">Light mode</p>
+              </div>
+            </div>
+            <i className="fas fa-chevron-right text-gray-400" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Account Section */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-white/50 mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Account</h3>
+          
+          {/* Privacy */}
+          <div className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <i className="fas fa-shield-alt text-green-600" aria-hidden="true" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">Privacy & Security</p>
+                <p className="text-sm text-gray-600">Manage your privacy settings</p>
+              </div>
+            </div>
+            <i className="fas fa-chevron-right text-gray-400" aria-hidden="true" />
+          </div>
+
+          {/* Help & Support */}
+          <div className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-cyan-100 rounded-full flex items-center justify-center">
+                <i className="fas fa-question-circle text-cyan-600" aria-hidden="true" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">Help & Support</p>
+                <p className="text-sm text-gray-600">Get help and contact support</p>
+              </div>
+            </div>
+            <i className="fas fa-chevron-right text-gray-400" aria-hidden="true" />
+          </div>
+
+          {/* About */}
+          <div className="w-full flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 transition-colors duration-200">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                <i className="fas fa-info-circle text-gray-600" aria-hidden="true" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-gray-800">About</p>
+                <p className="text-sm text-gray-600">Trip Buddy v1.0.0</p>
+              </div>
+            </div>
+            <i className="fas fa-chevron-right text-gray-400" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-2xl transition-colors duration-200 flex items-center justify-center space-x-2"
+        >
+          <i className="fas fa-sign-out-alt" aria-hidden="true" />
+          <span>Logout</span>
+        </button>
+      </div>
+
+      {/* Language Selection Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-sm border border-white/50">
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Select Language</h3>
+              <p className="text-gray-600 text-sm mt-1">Choose your preferred language</p>
+            </div>
+            
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => handleLanguageChange(lang.code)}
+                  className={`w-full flex items-center space-x-3 p-4 rounded-2xl transition-colors duration-200 ${
+                    (userPreferences?.language || currentLanguage) === lang.code
+                      ? 'bg-blue-100 border-2 border-blue-500'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="text-2xl">{lang.flag}</span>
+                  <span className="font-semibold text-gray-800 flex-1 text-left">{lang.name}</span>
+                  {(userPreferences?.language || currentLanguage) === lang.code && (
+                    <i className="fas fa-check text-blue-500" aria-hidden="true" />
+                  )}
+                </button>
+              ))}
+            </div>
+            
+            <button
+              onClick={() => setShowLanguageModal(false)}
+              className="w-full mt-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-2xl transition-colors duration-200"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <BottomNav />
+    </div>
+  )
+}

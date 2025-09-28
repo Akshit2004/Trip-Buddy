@@ -1,7 +1,9 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Welcome from './pages/landing/Welcome'
-import Login from './pages/auth/Login'
+import Welcome from './Pages/landing/Welcome'
+import Login from './Pages/auth/Login'
+import Home from './Pages/Home'
+import Profile from './Pages/Profile'
 
 export default function App() {
   return (
@@ -9,7 +11,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/welcome" element={<Welcome />} />
-        {/* Fallback route could redirect to root later */}
+        <Route path="/home" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
   )

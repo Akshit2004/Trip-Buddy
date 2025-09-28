@@ -129,6 +129,7 @@ export const signInUser = async (email, password) => {
           uid: user.uid,
           name: userData.name,
           email: userData.email,
+          profileComplete: userData.profileComplete || false,
           preferences: userData.preferences || {}
         },
         message: 'Signed in successfully!'
@@ -215,10 +216,54 @@ export const getUserData = async (uid) => {
 }
 
 /**
- * Update a user's language preference in Firestore (merges into preferences)
+ * Get user preferences from Firestore
  * @param {string} uid - User's UID
- * @param {string} language - Language code to save (e.g. 'en', 'hi')
+ * @returns {Object} Result with preferences data
  */
+export const getUserPreferences = async (uid) => {
+  try {
+    if (!uid) throw new Error('No uid provided')
+
+    const userDoc = await getDoc(doc(db, USERS_COLLECTION, uid))
+    
+    if (userDoc.exists()) {
+      const userData = userDoc.data()
+      return { 
+        success: true, 
+        data: userData.preferences || {},
+        name: userData.name,
+        email: userData.email
+      }
+    } else {
+      return { success: false, error: 'User document not found' }
+    }
+  } catch (error) {
+    console.error('Error getting user preferences:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+/**
+ * Mark user profile as complete after first-time setup
+ * @param {string} uid - User's UID
+ * @returns {Object} Result with success status
+ */
+export const setProfileComplete = async (uid) => {
+  try {
+    if (!uid) throw new Error('No uid provided')
+
+    await setDoc(doc(db, USERS_COLLECTION, uid), {
+      profileComplete: true,
+      updatedAt: serverTimestamp()
+    }, { merge: true })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error setting profile complete:', error)
+    return { success: false, error: error.message }
+  }
+}
+
 export const setUserLanguage = async (uid, language) => {
   try {
     if (!uid) throw new Error('No uid provided')

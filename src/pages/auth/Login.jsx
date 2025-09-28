@@ -88,8 +88,14 @@ export default function Login() {
               console.error('Error applying language preference after login:', err)
             }
 
-            // Navigate to welcome page on successful login
-            navigate('/welcome')
+            // Navigate based on profile completion status
+            if (result.user.profileComplete) {
+              // User has already completed language selection, go directly to home
+              navigate('/home')
+            } else {
+              // First time user, show language selector
+              navigate('/welcome')
+            }
         } else {
           // Show error message (include error code in DEV for easier debugging)
           const message = result.error || 'Login failed.'
