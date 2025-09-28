@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { createUserAccount, signInUser } from '../../firebase/userService'
+import { createUserAccount, signInUser, setUserLanguage } from '../../firebase/userService'
 import AnimatedBlob from '../../Components/AnimatedBlob'
 
 export default function Login() {
@@ -69,8 +69,27 @@ export default function Login() {
         
         if (result.success) {
           console.log('Login successful:', result.user)
-          // Navigate to welcome page on successful login
-          navigate('/welcome')
+            // Persist any user language preference locally
+            try {
+              const prefs = result.user.preferences || {}
+              if (prefs.language) {
+                localStorage.setItem('preferredLanguage', prefs.language)
+              }
+
+              // If user had selected a language before login (stored locally), push it to Firestore
+              const preLang = localStorage.getItem('preferredLanguage')
+              if (preLang && result.user.uid) {
+                // If Firestore doesn't already have it or differs, update server
+                if (!prefs.language || prefs.language !== preLang) {
+                  await setUserLanguage(result.user.uid, preLang)
+                }
+              }
+            } catch (err) {
+              console.error('Error applying language preference after login:', err)
+            }
+
+            // Navigate to welcome page on successful login
+            navigate('/welcome')
         } else {
           // Show error message (include error code in DEV for easier debugging)
           const message = result.error || 'Login failed.'
@@ -100,13 +119,13 @@ export default function Login() {
   const disabled = submitting
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-10 bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-100">
+    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-6 sm:py-10 bg-gradient-to-br from-cyan-50 via-blue-50 to-teal-100">
       <div className="w-full max-w-md space-y-6">
         {/* Animated Blob */}
         <AnimatedBlob />
         
         {/* Login/Signup Form */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-8 border border-white/50 transition-all duration-500">
+  <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 sm:p-8 border border-white/50 transition-all duration-500">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-800 transition-all duration-300">
               {isSignUp ? 'Create Account' : 'Welcome Back'}
@@ -133,7 +152,7 @@ export default function Login() {
                 autoComplete="name"
                 value={form.name}
                 onChange={handleChange}
-                className={`w-full rounded-2xl px-6 py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.name ? 'border-red-400' : 'border-gray-200'}`}
+                className={`w-full rounded-2xl px-4 py-3 sm:px-6 sm:py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.name ? 'border-red-400' : 'border-gray-200'}`}
                 placeholder="Full Name"
                 disabled={disabled}
               />
@@ -149,7 +168,7 @@ export default function Login() {
                 autoComplete="email"
                 value={form.email}
                 onChange={handleChange}
-                className={`w-full rounded-2xl px-6 py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
+                className={`w-full rounded-2xl px-4 py-3 sm:px-6 sm:py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
                 placeholder="Email"
                 disabled={disabled}
               />
@@ -165,7 +184,7 @@ export default function Login() {
                 autoComplete={isSignUp ? "new-password" : "current-password"}
                 value={form.password}
                 onChange={handleChange}
-                className={`w-full rounded-2xl px-6 py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.password ? 'border-red-400' : 'border-gray-200'}`}
+                className={`w-full rounded-2xl px-4 py-3 sm:px-6 sm:py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.password ? 'border-red-400' : 'border-gray-200'}`}
                 placeholder="Password"
                 disabled={disabled}
               />
@@ -181,7 +200,7 @@ export default function Login() {
                 autoComplete="new-password"
                 value={form.confirmPassword}
                 onChange={handleChange}
-                className={`w-full rounded-2xl px-6 py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.confirmPassword ? 'border-red-400' : 'border-gray-200'}`}
+                className={`w-full rounded-2xl px-4 py-3 sm:px-6 sm:py-4 bg-white/70 border-2 text-gray-800 placeholder:text-gray-500 focus:ring-4 focus:ring-cyan-200 focus:border-cyan-400 outline-none transition-all duration-300 ${errors.confirmPassword ? 'border-red-400' : 'border-gray-200'}`}
                 placeholder="Confirm Password"
                 disabled={disabled}
               />
@@ -192,7 +211,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={disabled}
-              className="relative w-full bg-gradient-to-r from-cyan-500 via-teal-500 to-blue-600 hover:from-cyan-600 hover:via-teal-600 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-8 py-4 rounded-2xl shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 transition-all duration-300 transform hover:scale-105"
+              className="relative w-full bg-gradient-to-r from-cyan-500 via-teal-500 to-blue-600 hover:from-cyan-600 hover:via-teal-600 hover:to-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold px-6 py-3 sm:px-8 sm:py-4 rounded-2xl shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-200 transition-all duration-300 transform hover:scale-105"
             >
               {submitting && <span className="absolute left-4 h-5 w-5 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
               <span>
@@ -233,7 +252,7 @@ export default function Login() {
               type="button"
               onClick={handleGoogleLogin}
               disabled={disabled}
-              className="w-full bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-md text-gray-700 font-medium px-8 py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
+              className="w-full bg-white border-2 border-gray-200 hover:border-gray-300 hover:shadow-md text-gray-700 font-medium px-4 py-3 sm:px-8 sm:py-4 rounded-2xl transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-60"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

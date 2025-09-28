@@ -35,7 +35,9 @@ export const createUserAccount = async (userData) => {
       profileComplete: false,
       preferences: {
         notifications: true,
-        theme: 'light'
+        theme: 'light',
+        // default language preference
+        language: 'en'
       }
     }
     
@@ -51,7 +53,8 @@ export const createUserAccount = async (userData) => {
       user: {
         uid: user.uid,
         name: userDocData.name,
-        email: userDocData.email
+        email: userDocData.email,
+        preferences: userDocData.preferences
       },
       message: 'Account created successfully!'
     }
@@ -125,7 +128,8 @@ export const signInUser = async (email, password) => {
         user: {
           uid: user.uid,
           name: userData.name,
-          email: userData.email
+          email: userData.email,
+          preferences: userData.preferences || {}
         },
         message: 'Signed in successfully!'
       }
@@ -144,7 +148,8 @@ export const signInUser = async (email, password) => {
         success: true,
         user: {
           uid: user.uid,
-          email: user.email
+          email: user.email,
+          preferences: basicUserData.preferences || {}
         },
         message: 'Signed in successfully!'
       }
@@ -206,5 +211,28 @@ export const getUserData = async (uid) => {
   } catch (error) {
     console.error('Error getting user data:', error)
     return null
+  }
+}
+
+/**
+ * Update a user's language preference in Firestore (merges into preferences)
+ * @param {string} uid - User's UID
+ * @param {string} language - Language code to save (e.g. 'en', 'hi')
+ */
+export const setUserLanguage = async (uid, language) => {
+  try {
+    if (!uid) throw new Error('No uid provided')
+
+    await setDoc(doc(db, USERS_COLLECTION, uid), {
+      preferences: {
+        language
+      },
+      updatedAt: serverTimestamp()
+    }, { merge: true })
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error setting user language:', error)
+    return { success: false, error: error.message }
   }
 }
