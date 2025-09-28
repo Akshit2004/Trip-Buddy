@@ -71,7 +71,10 @@ export default function Welcome() {
     const e = {}
     if (!d.name || !d.name.trim()) e.name = 'Name is required'
     if (!d.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) e.email = 'Valid email is required'
-    if (!d.phone || !/^\+?[0-9\s-]{7,15}$/.test(d.phone)) e.phone = 'Valid phone is required'
+    // Phone is optional. If provided, require 7-15 digits (allow spaces, dashes, and optional leading +)
+    if (d.phone && d.phone.trim()) {
+      if (!/^\+?[0-9\s-]{7,15}$/.test(d.phone)) e.phone = 'Valid phone is required (7-15 digits)'
+    }
     return e
   }
 
@@ -260,9 +263,12 @@ export default function Welcome() {
                 <div>
                   <input
                     name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9+\-\s]*"
                     value={details.phone}
                     onChange={(e) => setDetails(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="Phone number"
+                    placeholder="Phone number (optional)"
                     className={`w-full p-3 rounded-xl border ${errors.phone ? 'border-red-400' : 'border-gray-200'}`}
                   />
                   {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}

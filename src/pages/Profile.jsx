@@ -6,6 +6,8 @@ import { getUserPreferences, setUserLanguage } from '../firebase/userService'
 import { submitSupportRequest } from '../firebase/supportService'
 import TopNav from '../Components/TopNav'
 import BottomNav from '../Components/BottomNav'
+import boyAvatar from '../assets/Profile Picture/Boy.png'
+import girlAvatar from '../assets/Profile Picture/Girl.png'
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -164,8 +166,16 @@ export default function Profile() {
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-white/50 mb-6">
           <div className="text-center">
             {/* Avatar */}
-            <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <i className="fas fa-user text-white text-3xl" aria-hidden="true" />
+            <div className="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-4 border-white/60" style={{ background: 'linear-gradient(135deg,#60a5fa,#06b6d4)' }}>
+              <img
+                src={
+                  user?.photoURL
+                    ? user.photoURL
+                    : ((localStorage.getItem('preferredGender') || '').toLowerCase().startsWith('f') || (localStorage.getItem('preferredGender') || '').toLowerCase().includes('female') ? girlAvatar : boyAvatar)
+                }
+                alt="profile"
+                className="w-full h-full object-cover"
+              />
             </div>
             
             {/* User Info */}
