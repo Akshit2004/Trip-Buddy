@@ -161,7 +161,7 @@ export default function Profile() {
       <TopNav />
       
       {/* Main Content */}
-      <div className="pt-20 pb-28 px-4 max-w-md mx-auto">
+      <div className="pb-28 px-4 max-w-md mx-auto">
         {/* Profile Header */}
         <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-6 border border-white/50 mb-6">
           <div className="text-center">

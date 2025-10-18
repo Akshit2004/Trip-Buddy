@@ -13,16 +13,6 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 }
-
-// Debug: Log configuration status
-console.log('Firebase Config Check:')
-console.log('API Key:', firebaseConfig.apiKey ? '✅ Set' : '❌ Missing')
-console.log('Auth Domain:', firebaseConfig.authDomain ? '✅ Set' : '❌ Missing')
-console.log('Project ID:', firebaseConfig.projectId ? '✅ Set' : '❌ Missing')
-console.log('Storage Bucket:', firebaseConfig.storageBucket ? '✅ Set' : '❌ Missing')
-console.log('Messaging Sender ID:', firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing')
-console.log('App ID:', firebaseConfig.appId ? '✅ Set' : '❌ Missing')
-
 // Check if critical values are missing
 const missingValues = Object.entries(firebaseConfig)
   .filter(([key, value]) => !value)

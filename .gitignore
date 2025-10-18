@@ -68,3 +68,9 @@ temp/
 
 
 .vercel
+
+# Project folders
+/# Ignore scripts and data folders
+/scripts/
+/script/
+/data/

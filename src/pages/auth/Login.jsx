@@ -10,6 +10,23 @@ export default function Login() {
   const [errors, setErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
 
+  // Map Firebase auth error codes/messages to short user friendly text
+  function friendlyAuthMessage(codeOrMessage = '') {
+    const code = (codeOrMessage || '').toLowerCase()
+    // Common firebase codes appear like "auth/wrong-password"; we check substrings
+    if (code.includes('wrong-password')) return 'Incorrect password'
+    if (code.includes('user-not-found')) return 'Account not found'
+    if (code.includes('invalid-credential')) return 'Invalid email or password'
+    if (code.includes('invalid-email')) return 'Enter a valid email'
+    if (code.includes('email-already-in-use')) return 'Email already in use'
+    if (code.includes('weak-password')) return 'Password is too weak'
+    if (code.includes('popup-closed')) return 'Popup closed before finishing'
+    if (code.includes('network')) return 'Network error. Try again'
+    if (code.includes('too-many-requests')) return 'Too many attempts. Please wait'
+    // Fallback: keep it very short & generic
+    return 'Something went wrong'
+  }
+
   function validate(values) {
     const e = {}
     if (!values.email.trim()) e.email = 'Email is required'
@@ -55,13 +72,13 @@ export default function Login() {
         if (result.success) {
           console.log('Signup successful:', result.user)
           // Show success message or switch to login
-          alert(result.message)
+          alert('Account created! Please login')
           // Switch to login mode after successful signup
           setIsSignUp(false)
           setForm({ email: form.email, password: '', confirmPassword: '', name: '' })
         } else {
-          // Show error message
-          setErrors({ submit: result.error })
+          // Show simplified error message
+          setErrors({ submit: friendlyAuthMessage(result.code || result.error) })
         }
       } else {
         // Handle login with Firebase
@@ -97,15 +114,13 @@ export default function Login() {
               navigate('/welcome')
             }
         } else {
-          // Show error message (include error code in DEV for easier debugging)
-          const message = result.error || 'Login failed.'
-          const debugSuffix = import.meta.env.DEV && result.code ? ` (${result.code})` : ''
-          setErrors({ submit: `${message}${debugSuffix}` })
+          // Show simplified error message
+          setErrors({ submit: friendlyAuthMessage(result.code || result.error) })
         }
       }
     } catch (error) {
       console.error('Authentication error:', error)
-      setErrors({ submit: 'An unexpected error occurred. Please try again.' })
+      setErrors({ submit: friendlyAuthMessage(error.code || error.message) })
     } finally {
       setSubmitting(false)
     }
@@ -146,11 +161,11 @@ export default function Login() {
             navigate('/welcome')
           }
         } else {
-          setErrors({ submit: result.error || 'Google sign-in failed' })
+          setErrors({ submit: friendlyAuthMessage(result.code || result.error) })
         }
       } catch (error) {
         console.error('Google auth error:', error)
-        setErrors({ submit: 'Google sign-in failed. Please try again.' })
+        setErrors({ submit: friendlyAuthMessage(error.code || error.message) })
       } finally {
         setSubmitting(false)
       }
