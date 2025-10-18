@@ -1,8 +1,26 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
+
+// Initialize firebase-admin if service account is available via GOOGLE_APPLICATION_CREDENTIALS
+try {
+  const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (keyPath) {
+    const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+    console.log('Firebase Admin initialized using', keyPath);
+  } else {
+    console.log('GOOGLE_APPLICATION_CREDENTIALS not set — hotels endpoint will be unavailable');
+  }
+} catch (e) {
+  console.error('Failed to initialize Firebase Admin:', e.message || e);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -84,33 +102,36 @@ app.get('/api/locations/search', async (req, res) => {
   }
 });
 
-// Get hotels by city code
+// Get hotels by city code (from Firestore collection 'hotels')
 app.get('/api/hotels', async (req, res) => {
   try {
     const { cityCode } = req.query;
 
-    if (!cityCode || cityCode.length !== 3) {
-      return res.status(400).json({ error: 'cityCode query param (IATA 3-letter) is required' });
+    if (!admin.apps || admin.apps.length === 0) {
+      return res.status(500).json({ error: 'Firebase admin not initialized on server' });
     }
 
-    const token = await getAccessToken();
-    const url = new URL('https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city');
-    url.searchParams.set('cityCode', cityCode.toUpperCase());
-    url.searchParams.set('radius', '20');
-
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error('Hotel fetch failed: ' + text);
+    const db = admin.firestore();
+    let snapshot;
+    if (cityCode && cityCode.length === 3) {
+      const code = cityCode.toUpperCase();
+      // Query hotels where nearestAirport matches the IATA code, fallback to city field
+      let query = db.collection('hotels').where('nearestAirport', '==', code).limit(500);
+      snapshot = await query.get();
+      if (snapshot.empty) {
+        query = db.collection('hotels').where('city', '==', code).limit(500);
+        snapshot = await query.get();
+      }
+    } else {
+      // No cityCode provided: return a sample/list of hotels (limit to 500)
+      snapshot = await db.collection('hotels').limit(500).get();
     }
 
-    const data = await response.json();
-    res.json({ cityCode: cityCode.toUpperCase(), ...data });
+    const items = [];
+    snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
+    res.json({ cityCode: cityCode ? cityCode.toUpperCase() : null, count: items.length, data: items });
   } catch (err) {
-    console.error('Hotels API error:', err);
+    console.error('Hotels (Firestore) API error:', err);
     res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 });
@@ -314,6 +335,55 @@ Return ONLY the JSON array, no other text.`;
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Serve local dataset files (generated in /data)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function readLocalData(filename) {
+  const full = path.join(__dirname, '..', 'data', filename);
+  if (!fs.existsSync(full)) return null;
+  return JSON.parse(fs.readFileSync(full, 'utf8'));
+}
+
+// GET /api/flights?limit=100
+app.get('/api/flights', (req, res) => {
+  try {
+    const items = readLocalData('flights.json');
+    if (!items) return res.status(404).json({ error: 'flights data not found' });
+    const limit = Math.max(0, Math.min(1000, Number(req.query.limit) || items.length));
+    res.json({ count: items.length, data: items.slice(0, limit) });
+  } catch (err) {
+    console.error('Flights API error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
+});
+
+// GET /api/trains?limit=100
+app.get('/api/trains', (req, res) => {
+  try {
+    const items = readLocalData('trains.json');
+    if (!items) return res.status(404).json({ error: 'trains data not found' });
+    const limit = Math.max(0, Math.min(1000, Number(req.query.limit) || items.length));
+    res.json({ count: items.length, data: items.slice(0, limit) });
+  } catch (err) {
+    console.error('Trains API error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
+});
+
+// GET /api/taxis?limit=100
+app.get('/api/taxis', (req, res) => {
+  try {
+    const items = readLocalData('taxis.json');
+    if (!items) return res.status(404).json({ error: 'taxis data not found' });
+    const limit = Math.max(0, Math.min(1000, Number(req.query.limit) || items.length));
+    res.json({ count: items.length, data: items.slice(0, limit) });
+  } catch (err) {
+    console.error('Taxis API error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
 });
 
 app.listen(PORT, () => {

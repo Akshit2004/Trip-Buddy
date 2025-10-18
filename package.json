@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "server": "node server/index.js",
     "server:dev": "nodemon server/index.js",
-    "generate:data": "node scripts/generate_data.js"
+    "generate:data": "node scripts/generate_data.js",
+    "upload:data": "node scripts/upload_to_firestore.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

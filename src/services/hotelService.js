@@ -11,6 +11,9 @@ export async function searchLocations(keyword) {
 }
 
 export async function fetchHotelsByCity(cityCode) {
-  const code = (cityCode || 'PAR').toUpperCase();
+  if (!cityCode) {
+    return apiFetch(`/api/hotels`);
+  }
+  const code = String(cityCode).toUpperCase();
   return apiFetch(`/api/hotels?cityCode=${encodeURIComponent(code)}`);
 }
