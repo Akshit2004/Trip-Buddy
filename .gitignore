@@ -74,3 +74,6 @@ temp/
 /scripts/
 /script/
 /data/
+
+# Service account key (local only)
+/server/serviceAccountKey.json

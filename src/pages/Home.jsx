@@ -382,56 +382,105 @@ export default function Home() {
             </div>
 
             <div className="mt-5">
-              {activeTab !== 'hotels' && activeTab !== 'taxis' && (
-                <>
+                {activeTab === 'flights' && (
+                  <>
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-gray-500">Recent Trips</span>
+                      </div>
+
+                      {loadingFlights && <div className="text-sm text-gray-500 animate-pulse">Loading flights...</div>}
+                      {flightsError && <div className="text-sm text-red-600">{flightsError}</div>}
+                      {!loadingFlights && !flightsError && flights.length === 0 && (
+                        <div className="text-sm text-gray-500">No flights found.</div>
+                      )}
+
+                      <ul className="space-y-3">
+                        {(() => {
+                          const start = (flightsPage - 1) * PAGE_SIZE
+                          const pageItems = flights.slice(start, start + PAGE_SIZE)
+                          return pageItems.map(f => (
+                            <li key={f.id} className="bg-white rounded-xl shadow border border-gray-100 p-4">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <div className="font-semibold text-sm text-slate-800">{f.airline} — {f.flightNumber}</div>
+                                  <div className="text-xs text-gray-500">{f.from?.city || f.from?.code} → {f.to?.city || f.to?.code}</div>
+                                  <div className="text-[11px] text-gray-400 mt-1">Depart: {new Date(f.departAt).toLocaleString()}</div>
+                                </div>
+                                <div className="text-sm font-semibold text-teal-600">₹{f.priceINR}</div>
+                              </div>
+                            </li>
+                          ))
+                        })()}
+                      </ul>
+
+                      {flights.length > PAGE_SIZE && (
+                        <div className="flex items-center justify-between mt-3">
+                          <button
+                            className="px-3 py-1 rounded bg-white border text-sm"
+                            onClick={() => setFlightsPage(p => Math.max(1, p - 1))}
+                            disabled={flightsPage === 1}
+                          >Prev</button>
+                          <div className="text-xs text-gray-500">Page {flightsPage} of {Math.ceil(flights.length / PAGE_SIZE)}</div>
+                          <button
+                            className="px-3 py-1 rounded bg-white border text-sm"
+                            onClick={() => setFlightsPage(p => Math.min(Math.ceil(flights.length / PAGE_SIZE), p + 1))}
+                            disabled={flightsPage === Math.ceil(flights.length / PAGE_SIZE)}
+                          >Next</button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {activeTab === 'trains' && (
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-gray-500">Recent Trips</span>
+                      <span className="text-sm text-gray-500">Recent Trains</span>
                     </div>
 
-                    {loadingFlights && <div className="text-sm text-gray-500 animate-pulse">Loading flights...</div>}
-                    {flightsError && <div className="text-sm text-red-600">{flightsError}</div>}
-                    {!loadingFlights && !flightsError && flights.length === 0 && (
-                      <div className="text-sm text-gray-500">No flights found.</div>
+                    {loadingTrains && <div className="text-sm text-gray-500 animate-pulse">Loading trains...</div>}
+                    {trainsError && <div className="text-sm text-red-600">{trainsError}</div>}
+                    {!loadingTrains && !trainsError && trains.length === 0 && (
+                      <div className="text-sm text-gray-500">No trains found.</div>
                     )}
 
                     <ul className="space-y-3">
                       {(() => {
-                        const start = (flightsPage - 1) * PAGE_SIZE
-                        const pageItems = flights.slice(start, start + PAGE_SIZE)
-                        return pageItems.map(f => (
-                          <li key={f.id} className="bg-white rounded-xl shadow border border-gray-100 p-4">
+                        const start = (trainsPage - 1) * PAGE_SIZE
+                        const pageItems = trains.slice(start, start + PAGE_SIZE)
+                        return pageItems.map(t => (
+                          <li key={t.id} className="bg-white rounded-xl shadow border border-gray-100 p-4">
                             <div className="flex justify-between items-start">
                               <div>
-                                <div className="font-semibold text-sm text-slate-800">{f.airline} — {f.flightNumber}</div>
-                                <div className="text-xs text-gray-500">{f.from?.city || f.from?.code} → {f.to?.city || f.to?.code}</div>
-                                <div className="text-[11px] text-gray-400 mt-1">Depart: {new Date(f.departAt).toLocaleString()}</div>
+                                <div className="font-semibold text-sm text-slate-800">{t.operator} — {t.trainNumber}</div>
+                                <div className="text-xs text-gray-500">{t.from} → {t.to}</div>
+                                <div className="text-[11px] text-gray-400 mt-1">Depart: {new Date(t.departAt).toLocaleString()}</div>
                               </div>
-                              <div className="text-sm font-semibold text-teal-600">₹{f.priceINR}</div>
+                              <div className="text-sm font-semibold text-teal-600">₹{t.priceINR}</div>
                             </div>
                           </li>
                         ))
                       })()}
                     </ul>
 
-                    {flights.length > PAGE_SIZE && (
+                    {trains.length > PAGE_SIZE && (
                       <div className="flex items-center justify-between mt-3">
                         <button
                           className="px-3 py-1 rounded bg-white border text-sm"
-                          onClick={() => setFlightsPage(p => Math.max(1, p - 1))}
-                          disabled={flightsPage === 1}
+                          onClick={() => setTrainsPage(p => Math.max(1, p - 1))}
+                          disabled={trainsPage === 1}
                         >Prev</button>
-                        <div className="text-xs text-gray-500">Page {flightsPage} of {Math.ceil(flights.length / PAGE_SIZE)}</div>
+                        <div className="text-xs text-gray-500">Page {trainsPage} of {Math.ceil(trains.length / PAGE_SIZE)}</div>
                         <button
                           className="px-3 py-1 rounded bg-white border text-sm"
-                          onClick={() => setFlightsPage(p => Math.min(Math.ceil(flights.length / PAGE_SIZE), p + 1))}
-                          disabled={flightsPage === Math.ceil(flights.length / PAGE_SIZE)}
+                          onClick={() => setTrainsPage(p => Math.min(Math.ceil(trains.length / PAGE_SIZE), p + 1))}
+                          disabled={trainsPage === Math.ceil(trains.length / PAGE_SIZE)}
                         >Next</button>
                       </div>
                     )}
                   </div>
-                </>
-              )}
+                )}
 
               {activeTab === 'hotels' && (
                 <div>

@@ -5,6 +5,7 @@ import admin from 'firebase-admin';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { planTrip } from './tripAgent.js';
 
 dotenv.config();
 
@@ -12,9 +13,15 @@ dotenv.config();
 try {
   const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
   if (keyPath) {
-    const serviceAccount = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
-    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
-    console.log('Firebase Admin initialized using', keyPath);
+    // Resolve relative paths against the current working directory to avoid issues
+    const resolvedPath = path.isAbsolute(keyPath) ? keyPath : path.join(process.cwd(), keyPath);
+    if (fs.existsSync(resolvedPath)) {
+      const serviceAccount = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
+      admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+      console.log('Firebase Admin initialized using', resolvedPath);
+    } else {
+      console.warn('GOOGLE_APPLICATION_CREDENTIALS is set but file not found at', resolvedPath);
+    }
   } else {
     console.log('GOOGLE_APPLICATION_CREDENTIALS not set — hotels endpoint will be unavailable');
   }
@@ -107,31 +114,26 @@ app.get('/api/hotels', async (req, res) => {
   try {
     const { cityCode } = req.query;
 
-    if (!admin.apps || admin.apps.length === 0) {
-      return res.status(500).json({ error: 'Firebase admin not initialized on server' });
-    }
+    const items = readLocalData('hotels.json');
+    if (!items) return res.status(404).json({ error: 'hotels data not found' });
 
-    const db = admin.firestore();
-    let snapshot;
-    if (cityCode && cityCode.length === 3) {
-      const code = cityCode.toUpperCase();
-      // Query hotels where nearestAirport matches the IATA code, fallback to city field
-      let query = db.collection('hotels').where('nearestAirport', '==', code).limit(500);
-      snapshot = await query.get();
-      if (snapshot.empty) {
-        query = db.collection('hotels').where('city', '==', code).limit(500);
-        snapshot = await query.get();
+    const normalize = (s) => (s || '').toString().toLowerCase();
+    let filtered = items;
+
+    if (cityCode && cityCode.trim().length > 0) {
+      const c = cityCode.toString().toLowerCase();
+      // If user passed a 3-letter IATA code, match nearestAirport or code fields. Otherwise match city or name.
+      if (c.length === 3) {
+        filtered = items.filter(h => normalize(h.nearestAirport) === c || normalize(h.city) === c || normalize(h.code) === c || normalize(h.name) === c);
+      } else {
+        filtered = items.filter(h => normalize(h.city).includes(c) || normalize(h.name).includes(c));
       }
-    } else {
-      // No cityCode provided: return a sample/list of hotels (limit to 500)
-      snapshot = await db.collection('hotels').limit(500).get();
     }
 
-    const items = [];
-    snapshot.forEach(doc => items.push({ id: doc.id, ...doc.data() }));
-    res.json({ cityCode: cityCode ? cityCode.toUpperCase() : null, count: items.length, data: items });
+    const limit = Math.max(0, Math.min(1000, Number(req.query.limit) || filtered.length));
+    res.json({ cityCode: cityCode ? cityCode.toUpperCase() : null, count: filtered.length, data: filtered.slice(0, limit) });
   } catch (err) {
-    console.error('Hotels (Firestore) API error:', err);
+    console.error('Hotels (local) API error:', err);
     res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 });
@@ -296,7 +298,7 @@ Example format:
 Return ONLY the JSON array, no other text.`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiKey}`,
+  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -335,6 +337,99 @@ Return ONLY the JSON array, no other text.`;
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Plan trip endpoint - accepts origin, destination, dates, preferences
+app.post('/api/plan-trip', async (req, res) => {
+  try {
+    const body = req.body || {}
+    const { origin, destination, startDate, endDate, preferences } = body
+
+    // Basic validation
+    if (!origin || !destination) {
+      return res.status(400).json({ error: 'origin and destination are required' })
+    }
+
+    // If an N8N webhook is configured, forward the request there and return the response
+    const n8nUrl = process.env.N8N_WEBHOOK_URL
+    if (n8nUrl) {
+      const forwardResp = await fetch(n8nUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ origin, destination, startDate, endDate, preferences })
+      })
+
+      if (!forwardResp.ok) {
+        const text = await forwardResp.text()
+        throw new Error('n8n webhook failed: ' + text)
+      }
+
+      const data = await forwardResp.json()
+      return res.json({ source: 'n8n', plan: data })
+    }
+
+    // No n8n configured: run a simple local planner using existing datasets
+    // Read local datasets
+    const flights = readLocalData('flights.json') || []
+    const trains = readLocalData('trains.json') || []
+    const taxis = readLocalData('taxis.json') || []
+    const hotelsSnapshot = readLocalData('hotels.json') || []
+
+    // Very simple matching: find cheapest flight/trains between origin/destination (match by code or city)
+    const normalize = (s) => (s || '').toString().toLowerCase()
+    const o = normalize(origin)
+    const d = normalize(destination)
+
+    const matchFlight = flights.filter(f => (normalize(f.from?.city) === o || normalize(f.from?.code) === o) && (normalize(f.to?.city) === d || normalize(f.to?.code) === d))
+    const matchTrain = trains.filter(t => (normalize(t.from?.city) === o || normalize(t.from?.code) === o) && (normalize(t.to?.city) === d || normalize(t.to?.code) === d))
+    const matchHotels = hotelsSnapshot.filter(h => normalize(h.city) === d || normalize(h.name) === d)
+
+    const cheapestFlight = matchFlight.sort((a,b)=> (a.priceINR||Infinity)-(b.priceINR||Infinity))[0] || null
+    const fastestFlight = matchFlight.sort((a,b)=> new Date(a.departAt) - new Date(b.departAt))[0] || null
+
+    const cheapestTrain = matchTrain.sort((a,b)=> (a.priceINR||Infinity)-(b.priceINR||Infinity))[0] || null
+
+    const taxiOptions = taxis.slice(0,3)
+
+    const plan = {
+      origin,
+      destination,
+      startDate,
+      endDate,
+      preferences,
+      flights: {
+        cheapest: cheapestFlight,
+        fastest: fastestFlight,
+        matchesCount: matchFlight.length
+      },
+      trains: {
+        cheapest: cheapestTrain,
+        matchesCount: matchTrain.length
+      },
+      hotels: {
+        suggestions: matchHotels.slice(0,5),
+        count: matchHotels.length
+      },
+      taxis: taxiOptions
+    }
+
+    return res.json({ source: 'local', plan })
+  } catch (err) {
+    console.error('Plan trip error:', err)
+    res.status(500).json({ error: err.message || 'Internal Server Error' })
+  }
+})
+
+// AI-powered planning endpoint using Gemini and Firestore/local data
+app.post('/api/ai/plan', async (req, res) => {
+  try {
+    const payload = req.body || {};
+    const result = await planTrip(payload);
+    res.json(result);
+  } catch (err) {
+    console.error('AI plan error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
+  }
 });
 
 // Serve local dataset files (generated in /data)
@@ -388,12 +483,4 @@ app.get('/api/taxis', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-  console.log(`📍 Endpoints available:`);
-  console.log(`   - GET /api/locations/search?keyword=<location>`);
-  console.log(`   - GET /api/locations/gemini?query=<location>`);
-  console.log(`   - GET /api/hotels?cityCode=<IATA>`);
-  console.log(`   - GET /api/uber/estimates?start_latitude=<lat>&start_longitude=<lng>&end_latitude=<lat>&end_longitude=<lng>`);
-  console.log(`   - GET /api/uber/products?latitude=<lat>&longitude=<lng>`);
-  console.log(`   - GET /api/uber/time?start_latitude=<lat>&start_longitude=<lng>`);
-  console.log(`   - GET /api/health`);
 });

@@ -4,6 +4,7 @@ import Welcome from './pages/landing/Welcome'
 import Login from './pages/auth/Login'
 import Home from './pages/Home'
 import Profile from './pages/Profile'
+import TripPlanner from './pages/TripPlanner'
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/trips" element={<TripPlanner />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>
