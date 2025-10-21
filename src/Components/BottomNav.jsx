@@ -16,9 +16,9 @@ export default function BottomNav({ className = '' }) {
       svg: true
     },
     { 
-      to: '/inbox', 
-      label: 'Inbox', 
-      icon: 'fas fa-envelope',
+      to: '/history', 
+      label: 'History', 
+      icon: 'fas fa-clock',
     },
     { 
       to: '/profile', 

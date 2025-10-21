@@ -91,7 +91,7 @@ function legsSummaryPrice(legs) { return legs.reduce((sum,l)=> sum + (l.priceINR
 function legsSummaryDuration(legs) { return legs.reduce((sum,l)=> sum + (l.durationMinutes || 0), 0); }
 
 // Build intermodal route candidates using hubs + available flights/trains
-function buildIntermodalRoutes(origin, destination, datasets) {
+function buildIntermodalRoutes(origin, destination, datasets = {}) {
   const { flights = [], trains = [] } = datasets || {};
   const originHub = resolveCityToHub(origin);
   const destHub = resolveCityToHub(destination);
@@ -226,7 +226,7 @@ function buildIntermodalRoutes(origin, destination, datasets) {
   // De-duplicate by leg signatures and pick top few by total price
   const unique = new Map();
   for (const r of routes) {
-    const key = r.legs.map(l=> `${l.mode}:${l.from}-${l.to}`).join('|');
+    const key = r.legs.map(l=>`${l.mode}:${l.from}-${l.to}`).join('|');
     if (!unique.has(key)) unique.set(key, r);
     else if (r.totalPriceINR < unique.get(key).totalPriceINR) unique.set(key, r);
   }
@@ -264,10 +264,30 @@ export async function planTrip(payload, options = {}) {
   }
 
   // Fallback to local JSON files if empty
-  const serverDir = path.join(new URL(import.meta.url).pathname ? path.dirname(new URL(import.meta.url).pathname) : process.cwd());
-  if (!flights || flights.length === 0) flights = readLocalData(serverDir, 'flights.json') || [];
-  if (!trains || trains.length === 0) trains = readLocalData(serverDir, 'trains.json') || [];
-  if (!hotels || hotels.length === 0) hotels = readLocalData(serverDir, 'hotels.json') || [];
+  // Fix path for Windows: import.meta.url gives file:///d:/... on Windows
+  const fileUrl = new URL(import.meta.url);
+  let serverDir;
+  if (fileUrl.protocol === 'file:') {
+    // Decode URL-encoded characters and fix Windows path
+    serverDir = decodeURIComponent(fileUrl.pathname);
+    // Remove leading slash on Windows (turns /d:/path into d:/path)
+    if (process.platform === 'win32' && serverDir.startsWith('/')) {
+      serverDir = serverDir.substring(1);
+    }
+    serverDir = path.dirname(serverDir);
+  } else {
+    serverDir = process.cwd();
+  }
+  
+  if (!flights || flights.length === 0) {
+    flights = readLocalData(serverDir, 'flights.json') || [];
+  }
+  if (!trains || trains.length === 0) {
+    trains = readLocalData(serverDir, 'trains.json') || [];
+  }
+  if (!hotels || hotels.length === 0) {
+    hotels = readLocalData(serverDir, 'hotels.json') || [];
+  }
 
   // Build intermodal candidates via hubs (multi-leg: ground + flight/train combinations)
   const matchHotels = hotels.filter(h => normLower(h.city)===normLower(destination) || normLower(h.name)===normLower(destination) || normLower(h.nearestAirport)===normLower(destination));

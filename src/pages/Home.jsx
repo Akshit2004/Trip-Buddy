@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import TopNav from '../Components/TopNav'
 import BottomNav from '../Components/BottomNav'
+import BookingModal from '../Components/BookingModal'
 // ...existing code...
 import FlightIcon from '../Components/icons/FlightIcon'
 import TrainIcon from '../Components/icons/TrainIcon'
@@ -9,6 +10,9 @@ import TaxiIcon from '../Components/icons/TaxiIcon'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('flights')
+  const [bookingModalOpen, setBookingModalOpen] = useState(false)
+  const [currentBookingData, setCurrentBookingData] = useState(null)
+  
   const [hotels, setHotels] = useState([])
   const [loadingHotels, setLoadingHotels] = useState(false)
   const [hotelError, setHotelError] = useState(null)
@@ -401,14 +405,38 @@ export default function Home() {
                           const pageItems = flights.slice(start, start + PAGE_SIZE)
                           return pageItems.map(f => (
                             <li key={f.id} className="bg-white rounded-xl shadow border border-gray-100 p-4">
-                              <div className="flex justify-between items-start">
-                                <div>
+                              <div className="flex justify-between items-start mb-3">
+                                <div className="flex-1">
                                   <div className="font-semibold text-sm text-slate-800">{f.airline} — {f.flightNumber}</div>
                                   <div className="text-xs text-gray-500">{f.from?.city || f.from?.code} → {f.to?.city || f.to?.code}</div>
                                   <div className="text-[11px] text-gray-400 mt-1">Depart: {new Date(f.departAt).toLocaleString()}</div>
+                                  <div className="text-[11px] text-gray-400">Arrive: {new Date(f.arriveAt).toLocaleString()}</div>
                                 </div>
-                                <div className="text-sm font-semibold text-teal-600">₹{f.priceINR}</div>
+                                <div className="text-sm font-semibold text-teal-600">₹{f.priceINR?.toLocaleString()}</div>
                               </div>
+                              <button
+                                onClick={() => {
+                                  setCurrentBookingData({
+                                    type: 'flights',
+                                    flights: [{
+                                      from: f.from?.city || f.from?.code,
+                                      to: f.to?.city || f.to?.code,
+                                      airline: f.airline,
+                                      flightNumber: f.flightNumber,
+                                      departAt: f.departAt,
+                                      arriveAt: f.arriveAt,
+                                      price: f.priceINR,
+                                      class: f.class,
+                                      id: f.id
+                                    }],
+                                    totalPrice: f.priceINR
+                                  });
+                                  setBookingModalOpen(true);
+                                }}
+                                className="w-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+                              >
+                                Book Flight ✈️
+                              </button>
                             </li>
                           ))
                         })()}
@@ -451,14 +479,37 @@ export default function Home() {
                         const pageItems = trains.slice(start, start + PAGE_SIZE)
                         return pageItems.map(t => (
                           <li key={t.id} className="bg-white rounded-xl shadow border border-gray-100 p-4">
-                            <div className="flex justify-between items-start">
-                              <div>
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
                                 <div className="font-semibold text-sm text-slate-800">{t.operator} — {t.trainNumber}</div>
                                 <div className="text-xs text-gray-500">{t.from} → {t.to}</div>
                                 <div className="text-[11px] text-gray-400 mt-1">Depart: {new Date(t.departAt).toLocaleString()}</div>
+                                <div className="text-[11px] text-gray-400">Arrive: {new Date(t.arriveAt).toLocaleString()}</div>
                               </div>
-                              <div className="text-sm font-semibold text-teal-600">₹{t.priceINR}</div>
+                              <div className="text-sm font-semibold text-teal-600">₹{t.priceINR?.toLocaleString()}</div>
                             </div>
+                            <button
+                              onClick={() => {
+                                setCurrentBookingData({
+                                  type: 'trains',
+                                  trains: [{
+                                    from: t.from,
+                                    to: t.to,
+                                    trainNumber: t.trainNumber,
+                                    operator: t.operator,
+                                    departAt: t.departAt,
+                                    arriveAt: t.arriveAt,
+                                    price: t.priceINR,
+                                    id: t.id
+                                  }],
+                                  totalPrice: t.priceINR
+                                });
+                                setBookingModalOpen(true);
+                              }}
+                              className="w-full bg-gradient-to-r from-emerald-600 to-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:from-emerald-700 hover:to-green-700 transition-all shadow-md hover:shadow-lg"
+                            >
+                              Book Train 🚆
+                            </button>
                           </li>
                         ))
                       })()}
@@ -498,17 +549,46 @@ export default function Home() {
                       const pageItems = hotels.slice(start, start + PAGE_SIZE)
                       return pageItems.map(h => (
                         <li key={h.id || h.hotelId} className="bg-white rounded-xl shadow border border-gray-100 p-4">
-                          <div className="flex justify-between items-start">
-                            <div>
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
                               <div className="font-semibold text-sm text-slate-800">{h.name}</div>
-                              <div className="text-xs text-gray-500">{[h.city, h.country].filter(Boolean).join(', ')}{h.nearestAirport ? ` ({h.nearestAirport})` : ''}</div>
+                              <div className="text-xs text-gray-500">{[h.city, h.country].filter(Boolean).join(', ')}{h.nearestAirport ? ` (${h.nearestAirport})` : ''}</div>
                               {h.chain && <div className="text-[10px] text-gray-400 mt-1">Chain: {h.chain}</div>}
                               {typeof h.pricePerNightINR !== 'undefined' && (
-                                <div className="text-[11px] text-gray-600 mt-1">From ₹{h.pricePerNightINR}</div>
+                                <div className="text-[11px] text-gray-600 mt-1">From ₹{h.pricePerNightINR?.toLocaleString()}/night</div>
+                              )}
+                              {h.amenities && (
+                                <div className="flex gap-1 mt-2">
+                                  {h.amenities.wifi && <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded">📶 WiFi</span>}
+                                  {h.amenities.pool && <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded">🏊 Pool</span>}
+                                  {h.amenities.breakfastIncluded && <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded">🍳 Breakfast</span>}
+                                </div>
                               )}
                             </div>
                             {h.rating && <span className="text-xs bg-teal-600 text-white px-2 py-1 rounded">{h.rating}★</span>}
                           </div>
+                          <button
+                            onClick={() => {
+                              setCurrentBookingData({
+                                type: 'hotel',
+                                hotel: {
+                                  name: h.name,
+                                  city: h.city,
+                                  country: h.country,
+                                  rating: h.rating,
+                                  pricePerNight: h.pricePerNightINR,
+                                  amenities: h.amenities,
+                                  chain: h.chain,
+                                  id: h.id || h.hotelId
+                                },
+                                totalPrice: h.pricePerNightINR
+                              });
+                              setBookingModalOpen(true);
+                            }}
+                            className="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white text-sm font-semibold py-2 px-4 rounded-lg hover:from-amber-700 hover:to-orange-700 transition-all shadow-md hover:shadow-lg"
+                          >
+                            Book Hotel 🏨
+                          </button>
                         </li>
                       ))
                     })()}
@@ -583,6 +663,28 @@ export default function Home() {
         </main>
 
         <BottomNav />
+
+        {/* Booking Modal */}
+        <BookingModal
+          isOpen={bookingModalOpen}
+          onClose={() => {
+            setBookingModalOpen(false);
+            setCurrentBookingData(null);
+          }}
+          bookingData={currentBookingData}
+          onConfirm={(completeBooking) => {
+            console.log('Booking Confirmed:', completeBooking);
+            
+            // Show success message
+            alert(`✅ Booking Confirmed!\n\nBooking ID: ${completeBooking.bookingId}\nTotal: ₹${(completeBooking.totalPrice || 0).toLocaleString()}\n\nConfirmation email sent to ${completeBooking.userDetails.email}`);
+            
+            // Here you would typically:
+            // 1. Send booking data to your backend API
+            // 2. Process payment
+            // 3. Send confirmation emails
+            // 4. Update booking history in user profile
+          }}
+        />
       </div>
     </div>
   )
