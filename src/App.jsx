@@ -5,6 +5,7 @@ import Login from './pages/auth/Login'
 import Home from './pages/Home'
 import Profile from './pages/Profile'
 import TripPlanner from './pages/TripPlanner'
+import History from './pages/History'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/home" element={<Home />} />
         <Route path="/trips" element={<TripPlanner />} />
+        <Route path="/history" element={<History />} />
         <Route path="/profile" element={<Profile />} />
       </Routes>
     </BrowserRouter>

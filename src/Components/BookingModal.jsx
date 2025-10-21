@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { saveManualBooking } from '../services/historyService'
 
 function BookingModal({ isOpen, onClose, bookingData, onConfirm }) {
   const [formData, setFormData] = useState({
@@ -42,9 +43,33 @@ function BookingModal({ isOpen, onClose, bookingData, onConfirm }) {
     
     console.log('Final Booking:', completeBooking)
     
+    // Save individual bookings to history
+    if (bookingData.flights && bookingData.flights.length > 0) {
+      bookingData.flights.forEach(flight => {
+        saveManualBooking('flight', flight)
+      })
+    }
+    
+    if (bookingData.trains && bookingData.trains.length > 0) {
+      bookingData.trains.forEach(train => {
+        saveManualBooking('train', train)
+      })
+    }
+    
+    if (bookingData.hotel) {
+      saveManualBooking('hotel', bookingData.hotel)
+    }
+    
+    if (bookingData.taxi) {
+      saveManualBooking('taxi', bookingData.taxi)
+    }
+    
     if (onConfirm) {
       onConfirm(completeBooking)
     }
+    
+    // Show success message
+    alert('🎉 Booking confirmed! Check your History page to view all bookings.')
     
     // Reset and close
     setFormData({

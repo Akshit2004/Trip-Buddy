@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import BookingModal from './BookingModal'
+import { saveAITrip } from '../services/historyService'
 
 // Hub city name mapping for display purposes
 const CITY_BY_CODE = {
@@ -854,8 +855,22 @@ function TripPlanDisplay({ plan, origin, destination }) {
         onConfirm={(completeBooking) => {
           console.log('Booking Confirmed:', completeBooking);
           
+          // Save the complete AI trip to history
+          const tripData = {
+            origin: origin,
+            destination: destination,
+            startDate: plan.startDate || currentBookingData?.startDate,
+            endDate: plan.endDate || currentBookingData?.endDate,
+            plan: plan
+          };
+          
+          const saveResult = saveAITrip(tripData);
+          if (saveResult.success) {
+            console.log('Trip saved to history:', saveResult.trip);
+          }
+          
           // Show success message
-          alert(`✅ Booking Confirmed!\n\nBooking ID: ${completeBooking.bookingId}\nTotal: ₹${(completeBooking.totalPrice || 0).toLocaleString()}\n\nConfirmation email sent to ${completeBooking.userDetails.email}`);
+          alert(`✅ Booking Confirmed!\n\nBooking ID: ${completeBooking.bookingId}\nTotal: ₹${(completeBooking.totalPrice || 0).toLocaleString()}\n\nConfirmation email sent to ${completeBooking.userDetails.email}\n\n📋 Check your History page to view this trip!`);
           
           // Here you would typically:
           // 1. Send booking data to your backend API
