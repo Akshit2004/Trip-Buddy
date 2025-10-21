@@ -1,6 +1,13 @@
 # 🌟 Trip Buddy - AI-Powered Travel Planner
 
-An intelligent trip planning application that uses Google Gemini AI 1.5 Flash to generate personalized travel itineraries based on user preferences.
+An intelligent trip planning application with a **separate backend and frontend architecture**. Uses Google Gemini AI 2.5 Flash to generate personalized travel itineraries based on user preferences.
+
+## 🏗️ Architecture
+
+- **Frontend**: React + Vite (main project)
+- **Backend**: Node.js + Express API (standalone server in `backend/` folder)
+- **Deployment**: Independent projects on Vercel
+- **API**: RESTful endpoints for travel data, AI planning, and third-party integrations
 
 ## ✨ Features
 
@@ -39,49 +46,71 @@ An intelligent trip planning application that uses Google Gemini AI 1.5 Flash to
 - **Packing lists** and local tips
 - **Weather considerations** and best visit times
 
-## 🚀 Getting Started
+## 🚀 Quick Start
+
+For a quick setup guide, see [QUICK_START.md](./QUICK_START.md)
+
+For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-- Google Gemini AI API key
+- Node.js 18+ installed
+- npm or yarn package manager
+- API Keys:
+  - Google Gemini AI API key (required)
+  - Amadeus API credentials (required)
+  - Uber API token (optional)
 
-### Installation
+### Local Development Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/trip-buddy.git
-   cd trip-buddy
-   ```
+#### Frontend Setup
+```bash
+# Install frontend dependencies
+npm install
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# Create environment file
+cp .env.example .env
+```
 
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` file and add your API keys:
-   ```env
-   # Google Gemini AI Configuration
-   VITE_GEMINI_API_KEY=your_gemini_api_key_here
-   
-   # Firebase Configuration (if using authentication)
-   VITE_FIREBASE_API_KEY=your_firebase_api_key_here
-   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-   VITE_FIREBASE_PROJECT_ID=your_project_id
-   VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-   VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-   VITE_FIREBASE_APP_ID=your_app_id
-   VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-   ```
+Edit `.env` and add:
+```env
+VITE_API_BASE_URL=http://localhost:5000
+VITE_GEMINI_API_KEY=your_gemini_api_key
+```
 
-4. **Get your Gemini API key**
-   - Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - Create a new API key
+#### Backend Setup
+```bash
+# Navigate to backend folder
+cd backend
+
+# Install backend dependencies
+npm install
+
+# Create environment file
+cp .env.example .env
+```
+
+Edit `backend/.env` and add:
+```env
+PORT=5000
+FRONTEND_URL=http://localhost:5173
+AMADEUS_CLIENT_ID=your_amadeus_client_id
+AMADEUS_CLIENT_SECRET=your_amadeus_client_secret
+GEMINI_API_KEY=your_gemini_api_key
+UBER_SERVER_TOKEN=your_uber_token
+```
+
+#### 2. Run the Application
+
+**Terminal 1 - Backend:**
+```bash
+cd backend
+npm run dev
+```
+
+**Terminal 2 - Frontend:**
+```bash
+# From project root
+npm run dev
    - Copy the key to your `.env` file
 
 5. **Start the development server**

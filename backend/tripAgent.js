@@ -1,11 +1,14 @@
-import fetch from 'node-fetch';
 import admin from 'firebase-admin';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Helper to read local dataset as fallback
-function readLocalData(dirname, filename) {
-  const full = path.join(dirname, '..', 'data', filename);
+function readLocalData(filename) {
+  const full = path.join(__dirname, 'data', filename);
   if (!fs.existsSync(full)) return null;
   return JSON.parse(fs.readFileSync(full, 'utf8'));
 }
@@ -242,8 +245,7 @@ function buildIntermodalRoutes(origin, destination, datasets = {}) {
  */
 export async function planTrip(payload, options = {}) {
   const { origin, destination, startDate, endDate, preferences } = payload || {};
-  const geminiKey = process.env.VITE_GEMINI_API_KEY;
-  const dirname = path.resolve(path.dirname(''));
+  const geminiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
 
   // Gather datasets: prefer Firestore when admin initialized
   let flights = [];
@@ -264,33 +266,22 @@ export async function planTrip(payload, options = {}) {
   }
 
   // Fallback to local JSON files if empty
-  // Fix path for Windows: import.meta.url gives file:///d:/... on Windows
-  const fileUrl = new URL(import.meta.url);
-  let serverDir;
-  if (fileUrl.protocol === 'file:') {
-    // Decode URL-encoded characters and fix Windows path
-    serverDir = decodeURIComponent(fileUrl.pathname);
-    // Remove leading slash on Windows (turns /d:/path into d:/path)
-    if (process.platform === 'win32' && serverDir.startsWith('/')) {
-      serverDir = serverDir.substring(1);
-    }
-    serverDir = path.dirname(serverDir);
-  } else {
-    serverDir = process.cwd();
-  }
-  
   if (!flights || flights.length === 0) {
-    flights = readLocalData(serverDir, 'flights.json') || [];
+    flights = readLocalData('flights.json') || [];
   }
   if (!trains || trains.length === 0) {
-    trains = readLocalData(serverDir, 'trains.json') || [];
+    trains = readLocalData('trains.json') || [];
   }
   if (!hotels || hotels.length === 0) {
-    hotels = readLocalData(serverDir, 'hotels.json') || [];
+    hotels = readLocalData('hotels.json') || [];
   }
 
   // Build intermodal candidates via hubs (multi-leg: ground + flight/train combinations)
-  const matchHotels = hotels.filter(h => normLower(h.city)===normLower(destination) || normLower(h.name)===normLower(destination) || normLower(h.nearestAirport)===normLower(destination));
+  const matchHotels = hotels.filter(h => 
+    normLower(h.city)===normLower(destination) || 
+    normLower(h.name)===normLower(destination) || 
+    normLower(h.nearestAirport)===normLower(destination)
+  );
   const routeCandidates = buildIntermodalRoutes(origin, destination, { flights, trains });
 
   // Build prompt for Gemini
@@ -342,11 +333,14 @@ Return ONLY JSON.`;
   }
 
   // Call Gemini
-  const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-  });
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, 
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    }
+  );
 
   if (!resp.ok) {
     const t = await resp.text().catch(()=>null);
