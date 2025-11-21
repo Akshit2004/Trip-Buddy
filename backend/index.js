@@ -36,52 +36,32 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+// Support single or comma-separated FRONTEND_URL(s). If not set, allow all origins (use with caution).
+const rawFrontend = process.env.FRONTEND_URL || '*';
+let allowedOrigins = [];
+if (rawFrontend === '*') {
+  allowedOrigins = ['*'];
+} else {
+  allowedOrigins = rawFrontend.split(',').map(s => s.trim()).filter(Boolean);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: function(origin, callback) {
+    // If no origin (e.g., curl or server-to-server), allow it
+    if (!origin) return callback(null, true);
+    // Allow wildcard
+    if (allowedOrigins.includes('*')) return callback(null, true);
+    // Allow if origin matches one of the allowed list
+    if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+    // Otherwise block
+    const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+    return callback(new Error(msg), false);
+  },
   credentials: true
 }));
 app.use(express.json());
 
-// Token cache for Amadeus OAuth2
-const TOKEN_CACHE = { token: null, expiresAt: 0 };
 
-// Get Amadeus access token with caching
-async function getAccessToken() {
-  const now = Date.now();
-  if (TOKEN_CACHE.token && now < TOKEN_CACHE.expiresAt) {
-    return TOKEN_CACHE.token;
-  }
-
-  const clientId = process.env.AMADEUS_CLIENT_ID;
-  const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    throw new Error('Amadeus credentials are missing');
-  }
-
-  const body = new URLSearchParams({
-    grant_type: 'client_credentials',
-    client_id: clientId,
-    client_secret: clientSecret
-  });
-
-  const resp = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body
-  });
-
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error('Failed to obtain token: ' + text);
-  }
-
-  const data = await resp.json();
-  TOKEN_CACHE.token = data.access_token;
-  TOKEN_CACHE.expiresAt = now + (data.expires_in - 30) * 1000; // 30s safety margin
-
-  return TOKEN_CACHE.token;
-}
 
 // Helper function to read local dataset files
 function readLocalData(filename) {
@@ -108,7 +88,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Search for locations (cities/airports) by keyword using Amadeus API
+// Search for locations (cities/airports) by keyword using local demo data
 app.get('/api/locations/search', async (req, res) => {
   try {
     const { keyword } = req.query;
@@ -117,23 +97,56 @@ app.get('/api/locations/search', async (req, res) => {
       return res.status(400).json({ error: 'keyword query param (min 2 chars) is required' });
     }
 
-    const token = await getAccessToken();
-    const url = new URL('https://test.api.amadeus.com/v1/reference-data/locations');
-    url.searchParams.set('keyword', keyword);
-    url.searchParams.set('subType', 'CITY,AIRPORT');
-    url.searchParams.set('page[limit]', '10');
+    // Fallback: build suggestions from local demo data
+    const q = (keyword || '').toString().trim().toLowerCase();
+    const hotels = readLocalData('hotels.json') || [];
+    const flights = readLocalData('flights.json') || [];
 
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const suggestionsMap = new Map();
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error('Location search failed: ' + text);
+    for (const h of hotels) {
+      const city = (h.city || '').toString().trim();
+      const country = (h.country || '').toString().trim();
+      if (!city) continue;
+      const key = `${city.toLowerCase()}|${country.toLowerCase()}`;
+      if (!suggestionsMap.has(key)) {
+        suggestionsMap.set(key, {
+          id: `hotel-${h.id || city}`,
+          name: country ? `${city}, ${country}` : city,
+          address: { cityName: city, countryName: country },
+          iataCode: h.nearestAirport || null
+        });
+      }
     }
 
-    const data = await response.json();
-    res.json(data);
+    for (const f of flights) {
+      const fromCity = f.from?.city || f.from?.code || '';
+      const toCity = f.to?.city || f.to?.code || '';
+      const candidates = [fromCity, toCity].filter(Boolean);
+      for (const c of candidates) {
+        const city = c.toString().trim();
+        if (!city) continue;
+        const key = `${city.toLowerCase()}|`;
+        if (!suggestionsMap.has(key)) {
+          suggestionsMap.set(key, {
+            id: `flight-${city}`,
+            name: city,
+            address: { cityName: city, countryName: '' },
+            iataCode: (city.length === 3 ? city.toUpperCase() : null)
+          });
+        }
+      }
+    }
+
+    const all = Array.from(suggestionsMap.values());
+    const filtered = all.filter(s => {
+      const name = (s.name || '').toLowerCase();
+      const city = (s.address?.cityName || '').toLowerCase();
+      const code = (s.iataCode || '').toLowerCase();
+      return name.includes(q) || city.includes(q) || code.includes(q) || city.startsWith(q);
+    });
+
+    return res.json({ data: filtered.slice(0, 10) });
   } catch (err) {
     console.error('Location search error:', err);
     res.status(500).json({ error: err.message || 'Internal Server Error' });

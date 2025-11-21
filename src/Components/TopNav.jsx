@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { auth } from '../firebase/config'
 import boyAvatar from '../assets/Profile Picture/Boy.png'
 import girlAvatar from '../assets/Profile Picture/Girl.png'
+import AnimatedBlob from './AnimatedBlob'
 
 // Helper to pick an avatar based on available data.
 // Preference order: auth.currentUser.photoURL > localStorage.preferredGender (female -> girl) > default (boy)
@@ -14,7 +15,7 @@ function chooseAvatar() {
   return boyAvatar
 }
 
-export default function TopNav({ title = 'Travel' }) {
+export default function TopNav({ title = 'Trip Buddy' }) {
   const [avatarSrc, setAvatarSrc] = useState(chooseAvatar())
 
   // Update avatar when auth state changes (e.g., login) or when localStorage might change.
@@ -39,7 +40,9 @@ export default function TopNav({ title = 'Travel' }) {
         </Link>
       </div>
 
-      <h1 className="text-base font-semibold text-slate-800">{title}</h1>
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+        <AnimatedBlob size={12} />
+      </div>
 
       <div>
         <button className="w-10 h-10 rounded-lg flex items-center justify-center bg-white/90 border border-white/60 shadow-sm">

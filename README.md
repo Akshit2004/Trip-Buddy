@@ -57,7 +57,7 @@ For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUI
 - npm or yarn package manager
 - API Keys:
   - Google Gemini AI API key (required)
-  - Amadeus API credentials (required)
+   - Google Gemini AI API key (required)
   - Uber API token (optional)
 
 ### Local Development Setup
@@ -93,8 +93,6 @@ Edit `backend/.env` and add:
 ```env
 PORT=5000
 FRONTEND_URL=http://localhost:5173
-AMADEUS_CLIENT_ID=your_amadeus_client_id
-AMADEUS_CLIENT_SECRET=your_amadeus_client_secret
 GEMINI_API_KEY=your_gemini_api_key
 UBER_SERVER_TOKEN=your_uber_token
 ```

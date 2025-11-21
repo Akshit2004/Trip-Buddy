@@ -155,8 +155,8 @@ export default function Welcome() {
         {/* Top Branding */}
         <div className="text-center mb-6">
           <AnimatedBlob />
-          <h1 className="text-3xl font-bold text-gray-800 mb-1">TripBuddy</h1>
-          <p className="text-gray-600">Your journey starts here</p>
+          <h1 className="text-3xl font-heading font-bold text-gray-800 mb-1">TripBuddy</h1>
+          <p className="text-gray-600 font-sans">Your journey starts here</p>
         </div>
 
         {/* Step container */}
@@ -164,8 +164,8 @@ export default function Welcome() {
           {step === 0 && (
             <div className="w-full max-w-md">
               <div className="text-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">Choose your language</h2>
-                <p className="text-sm text-gray-500">Select your preferred language to continue</p>
+                <h2 className="text-xl font-heading font-semibold text-gray-800">Choose your language</h2>
+                <p className="text-sm text-gray-500 font-sans">Select your preferred language to continue</p>
               </div>
               <div className="space-y-3">
                 {languages.map((lang) => (
@@ -182,7 +182,7 @@ export default function Welcome() {
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">{lang.flag}</span>
-                      <span className="font-medium text-gray-800">{lang.name}</span>
+                      <span className="font-heading font-medium text-gray-800">{lang.name}</span>
                     </div>
                     {selectedLanguage === lang.code && isLoading && (
                       <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -201,28 +201,28 @@ export default function Welcome() {
           {step === 1 && (
             <div className="w-full max-w-md text-center">
               <div className="mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">Select your profile avatar</h2>
-                <p className="text-sm text-gray-500">Choose who represents you</p>
+                <h2 className="text-xl font-heading font-semibold text-gray-800">Select your profile avatar</h2>
+                <p className="text-sm text-gray-500 font-sans">Choose who represents you</p>
               </div>
               <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-6 justify-center items-center">
                   <button onClick={async () => { setSelectedGender('boy'); await finalizeProfile('boy') }} className={`p-2 rounded-xl ${selectedGender === 'boy' ? 'ring-4 ring-blue-200' : 'hover:ring-2 hover:ring-gray-200'}`}>
                     <img src={BoyImg} alt="Boy" className="w-28 h-28 rounded-full object-cover" />
-                    <div className="mt-2 text-sm text-gray-700">Boy</div>
+                    <div className="mt-2 text-sm text-gray-700 font-sans font-medium">Boy</div>
                   </button>
 
                   <button onClick={async () => { setSelectedGender('girl'); await finalizeProfile('girl') }} className={`p-2 rounded-xl ${selectedGender === 'girl' ? 'ring-4 ring-pink-200' : 'hover:ring-2 hover:ring-gray-200'}`}>
                     <img src={GirlImg} alt="Girl" className="w-28 h-28 rounded-full object-cover" />
-                    <div className="mt-2 text-sm text-gray-700">Girl</div>
+                    <div className="mt-2 text-sm text-gray-700 font-sans font-medium">Girl</div>
                   </button>
                 </div>
 
                 <div className="flex gap-4">
-                  <button onClick={async () => { setSelectedGender('other'); await finalizeProfile('other') }} className={`px-4 py-2 rounded-full text-sm ${selectedGender === 'other' ? 'bg-yellow-100 ring-2 ring-yellow-200' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                  <button onClick={async () => { setSelectedGender('other'); await finalizeProfile('other') }} className={`px-4 py-2 rounded-full text-sm font-sans font-medium ${selectedGender === 'other' ? 'bg-yellow-100 ring-2 ring-yellow-200' : 'bg-gray-100 hover:bg-gray-200'}`}>
                     Other
                   </button>
 
-                  <button onClick={async () => { setSelectedGender('prefer_not_say'); await finalizeProfile('prefer_not_say') }} className={`px-4 py-2 rounded-full text-sm ${selectedGender === 'prefer_not_say' ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                  <button onClick={async () => { setSelectedGender('prefer_not_say'); await finalizeProfile('prefer_not_say') }} className={`px-4 py-2 rounded-full text-sm font-sans font-medium ${selectedGender === 'prefer_not_say' ? 'bg-gray-200 ring-2 ring-gray-300' : 'bg-gray-100 hover:bg-gray-200'}`}>
                     Prefer not to say
                   </button>
                 </div>
@@ -233,8 +233,8 @@ export default function Welcome() {
           {step === 2 && (
             <div className="w-full max-w-md">
               <div className="text-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800">Tell us about yourself</h2>
-                <p className="text-sm text-gray-500">We use this to personalize your profile</p>
+                <h2 className="text-xl font-heading font-semibold text-gray-800">Tell us about yourself</h2>
+                <p className="text-sm text-gray-500 font-sans">We use this to personalize your profile</p>
               </div>
 
               <div className="space-y-3">
@@ -244,9 +244,9 @@ export default function Welcome() {
                     value={details.name}
                     onChange={(e) => setDetails(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="Full name"
-                    className={`w-full p-3 rounded-xl border ${errors.name ? 'border-red-400' : 'border-gray-200'}`}
+                    className={`w-full p-3 rounded-xl border font-sans ${errors.name ? 'border-red-400' : 'border-gray-200'}`}
                   />
-                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                  {errors.name && <p className="text-xs text-red-500 mt-1 font-sans">{errors.name}</p>}
                 </div>
 
                 <div>
@@ -255,9 +255,9 @@ export default function Welcome() {
                     value={details.email}
                     onChange={(e) => setDetails(prev => ({ ...prev, email: e.target.value }))}
                     placeholder="Email"
-                    className={`w-full p-3 rounded-xl border ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
+                    className={`w-full p-3 rounded-xl border font-sans ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
                   />
-                  {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+                  {errors.email && <p className="text-xs text-red-500 mt-1 font-sans">{errors.email}</p>}
                 </div>
 
                 <div>
@@ -269,14 +269,14 @@ export default function Welcome() {
                     value={details.phone}
                     onChange={(e) => setDetails(prev => ({ ...prev, phone: e.target.value }))}
                     placeholder="Phone number (optional)"
-                    className={`w-full p-3 rounded-xl border ${errors.phone ? 'border-red-400' : 'border-gray-200'}`}
+                    className={`w-full p-3 rounded-xl border font-sans ${errors.phone ? 'border-red-400' : 'border-gray-200'}`}
                   />
-                  {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
+                  {errors.phone && <p className="text-xs text-red-500 mt-1 font-sans">{errors.phone}</p>}
                 </div>
 
                 <div className="flex gap-3">
-                  <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl bg-gray-200">Back</button>
-                  <button onClick={submitDetails} className="flex-1 py-3 rounded-xl bg-blue-500 text-white">Finish</button>
+                  <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl bg-gray-200 font-heading font-semibold">Back</button>
+                  <button onClick={submitDetails} className="flex-1 py-3 rounded-xl bg-blue-500 text-white font-heading font-semibold">Finish</button>
                 </div>
               </div>
             </div>
@@ -285,7 +285,7 @@ export default function Welcome() {
 
         {/* Footer controls */}
         <div className="mt-6 flex items-center justify-between">
-          <button onClick={() => setStep(s => Math.max(0, s - 1))} className="text-sm text-gray-600 hover:underline">Back</button>
+          <button onClick={() => setStep(s => Math.max(0, s - 1))} className="text-sm text-gray-600 hover:underline font-sans">Back</button>
           <div className="flex-1" />
           <div className="w-16" />
         </div>

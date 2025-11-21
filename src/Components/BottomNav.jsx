@@ -74,7 +74,7 @@ export default function BottomNav({ className = '' }) {
                           aria-hidden="true"
                         />
                       )}
-                      <span className={`text-[9px] font-medium leading-none text-center whitespace-nowrap transition-all duration-300 ${
+                      <span className={`text-[9px] font-sans font-medium leading-none text-center whitespace-nowrap transition-all duration-300 ${
                         isActive ? 'text-black font-bold' : 'text-gray-500 group-hover:text-gray-700'
                       }`}>{item.label}</span>
                     </div>

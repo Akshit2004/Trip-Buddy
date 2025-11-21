@@ -238,7 +238,7 @@ const GeminiThinkingLoader = () => {
       <div className="absolute bottom-10 right-10 w-24 h-24 border-b-4 border-r-4 border-cyan-500 rounded-br-3xl opacity-40 animate-pulse"></div>
       <div className="absolute bottom-12 right-12 w-20 h-20 border-b-2 border-r-2 border-blue-400 rounded-br-3xl opacity-30 animate-pulse animation-delay-1000"></div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0%, 100% { transform: translate(0, 0) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }

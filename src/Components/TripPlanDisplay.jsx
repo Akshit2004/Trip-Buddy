@@ -98,7 +98,24 @@ function TripPlanDisplay({ plan, origin, destination }) {
     }
   }
 
-  const totalPrice = costs.totalINR || costs.transportTotalINR || route.totalPriceINR || 0
+  // Compute nights/days for accommodation: prefer explicit itinerary length (days planned).
+  // Many users expect "4 day trip" to mean 4 nights here; adjust if you prefer nights = days - 1.
+  const msPerDay = 1000 * 60 * 60 * 24
+  const daysFromDates = (plan.startDate && plan.endDate)
+    ? Math.max(1, Math.ceil((new Date(plan.endDate) - new Date(plan.startDate)) / msPerDay))
+    : 0
+  const daysCount = itinerary && itinerary.length > 0 ? itinerary.length : (daysFromDates || 1)
+
+  const perNight = costs.accommodationPerNightINR || (plan.recommendedBookings?.hotel?.pricePerNightINR) || (plan.hotels?.[0]?.pricePerNightINR) || 0
+  const accommodationTotal = Math.round(perNight * daysCount)
+  const transportTotal = costs.transportTotalINR || route.totalPriceINR || 0
+
+  // Recompute total using transport + accommodation (this avoids relying on a possibly-miscomputed costs.totalINR)
+  const computedTotal = transportTotal + accommodationTotal
+  // Prefer computedTotal when costs.totalINR is missing or differs from computedTotal
+  const totalPrice = (typeof costs.totalINR === 'number' && Math.abs(costs.totalINR - computedTotal) < 1)
+    ? costs.totalINR
+    : computedTotal
   const totalDuration = route.totalDurationMinutes || legs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0)
 
   return (
@@ -484,16 +501,16 @@ function TripPlanDisplay({ plan, origin, destination }) {
                 <span className="font-semibold text-slate-900">₹{costs.transportTotalINR.toLocaleString()}</span>
               </div>
             )}
-            {costs.accommodationPerNightINR && (
-              <div className="flex justify-between">
-                <span className="text-slate-600">Accommodation (per night)</span>
-                <span className="font-semibold text-slate-900">₹{costs.accommodationPerNightINR.toLocaleString()}</span>
+            {(perNight && daysCount) && (
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>Accommodation total ({daysCount} {daysCount === 1 ? 'night' : 'nights'})</span>
+                <span className="font-semibold text-slate-900">₹{accommodationTotal.toLocaleString()}</span>
               </div>
             )}
             {costs.totalINR && (
               <div className="flex justify-between pt-2 border-t-2 border-teal-500 mt-2">
                 <span className="text-slate-800 font-bold">Total Estimate</span>
-                <span className="font-bold text-teal-600 text-lg">₹{costs.totalINR.toLocaleString()}</span>
+                <span className="font-bold text-teal-600 text-lg">₹{totalPrice.toLocaleString()}</span>
               </div>
             )}
           </div>
@@ -701,7 +718,7 @@ function TripPlanDisplay({ plan, origin, destination }) {
                     },
                     checkIn: plan.startDate || new Date().toISOString(),
                     checkOut: plan.endDate || new Date().toISOString(),
-                    totalPrice: hotel?.pricePerNightINR || costs.accommodationPerNightINR || 0
+                    totalPrice: accommodationTotal || hotel?.pricePerNightINR || costs.accommodationPerNightINR || 0
                   };
                   
                   setCurrentBookingData(bookingData);
