@@ -1,280 +1,42 @@
-# 🌟 Trip Buddy - AI-Powered Travel Planner
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-An intelligent trip planning application with a **separate backend and frontend architecture**. Uses Google Gemini AI 2.5 Flash to generate personalized travel itineraries based on user preferences.
+## Getting Started
 
-## 🏗️ Architecture
+First, run the development server:
 
-- **Frontend**: React + Vite (main project)
-- **Backend**: Node.js + Express API (standalone server in `backend/` folder)
-- **Deployment**: Independent projects on Vercel
-- **API**: RESTful endpoints for travel data, AI planning, and third-party integrations
-
-## ✨ Features
-
-### 🎯 Smart Preference Collection
-- **Multi-step form** with intuitive navigation
-- **Destination selection** with validation
-- **Travel date picker** with date range selection
-- **Duration counter** with +/- buttons
-- **Budget selection** (Low/Medium/High) with visual cards
-- **Travel companion options** (Solo/Couple/Family/Friends)
-- **Activity interests** with multiple selection grid
-- **Additional preferences** for special requests
-
-### 🤖 AI-Powered Planning
-- **Google Gemini AI 1.5 Flash** integration
-- **Smart prompt engineering** for contextual recommendations
-- **Comprehensive itinerary generation** with day-by-day breakdown
-- **Budget breakdown** with cost estimates
-- **Place recommendations** with ratings and descriptions
-- **Local tips and insights** for better travel experience
-
-### 📱 Beautiful User Interface
-- **Modern responsive design** that works on all devices
-- **Progress indicator** showing form completion
-- **Loading animations** during AI processing
-- **Tabbed interface** for easy navigation
-- **Print functionality** for offline access
-- **Share capabilities** for social sharing
-
-### 📊 Comprehensive Results
-- **Day-by-day itinerary** with timeline view
-- **Activity details** with time, location, and costs
-- **Recommended places** with categories and ratings
-- **Budget breakdown** with cost analysis
-- **Transportation information** for getting around
-- **Packing lists** and local tips
-- **Weather considerations** and best visit times
-
-## 🚀 Quick Start
-
-For a quick setup guide, see [QUICK_START.md](./QUICK_START.md)
-
-For detailed deployment instructions, see [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
-
-### Prerequisites
-- Node.js 18+ installed
-- npm or yarn package manager
-- API Keys:
-  - Google Gemini AI API key (required)
-   - Google Gemini AI API key (required)
-  - Uber API token (optional)
-
-### Local Development Setup
-
-#### Frontend Setup
 ```bash
-# Install frontend dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-```
-
-Edit `.env` and add:
-```env
-VITE_API_BASE_URL=http://localhost:5000
-VITE_GEMINI_API_KEY=your_gemini_api_key
-```
-
-#### Backend Setup
-```bash
-# Navigate to backend folder
-cd backend
-
-# Install backend dependencies
-npm install
-
-# Create environment file
-cp .env.example .env
-```
-
-Edit `backend/.env` and add:
-```env
-PORT=5000
-FRONTEND_URL=http://localhost:5173
-GEMINI_API_KEY=your_gemini_api_key
-UBER_SERVER_TOKEN=your_uber_token
-```
-
-#### 2. Run the Application
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-**Terminal 2 - Frontend:**
-```bash
-# From project root
-npm run dev
-   - Copy the key to your `.env` file
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-5. **Start the development server**
-   ```bash
-   npm run dev
-   ```
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-6. **Open your browser**
-   - Navigate to `http://localhost:5173`
-   - Click on "Plan" in the navigation to access the trip planner
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## 🎨 How It Works
+## Learn More
 
-### Step 1: Tell Us Your Preferences
-Fill out the multi-step form with your travel preferences:
-- Destination of choice
-- Travel dates
-- Trip duration
-- Budget range
-- Travel companions
-- Activity interests
-- Additional preferences
+To learn more about Next.js, take a look at the following resources:
 
-### Step 2: AI Processing
-Our Google Gemini AI analyzes your preferences and generates:
-- Personalized itinerary
-- Activity recommendations
-- Budget breakdown
-- Local insights
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-### Step 3: Get Your Plan
-Receive a comprehensive travel plan with:
-- Day-by-day activities
-- Recommended places
-- Cost estimates
-- Travel tips
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## 📁 Project Structure
+## Deploy on Vercel
 
-```
-src/
-├── components/
-│   ├── Navbar/
-│   └── footer/
-├── pages/
-│   ├── auth/
-│   ├── landing/
-│   └── trip-planner/
-│       ├── TripPlanner.jsx       # Main trip planner component
-│       ├── TripPlanner.css       # Styles for trip planner
-│       └── components/
-│           ├── ItineraryDisplay.jsx  # Results display
-│           └── ItineraryDisplay.css  # Results styling
-├── services/
-│   └── geminiService.js          # AI integration service
-├── firebase/
-│   └── config.js                 # Firebase configuration
-└── App.jsx                       # Main app component
-```
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-## 🔧 Technologies Used
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+plan the ai trip with modern ui 
+it will ask information like destination starting lcoation spending amount and traveling groups etc 
 
-- **React 19** - Modern React with latest features
-- **Vite** - Fast build tool and development server
-- **Google Generative AI** - AI-powered trip planning
-- **Firebase** - Authentication and hosting
-- **CSS3** - Modern styling with gradients and animations
-- **React Router** - Client-side routing
+fetch buses flights train and hotels from firestore to plan a full trip 
 
-## 🎯 Key Components
-
-### TripPlanner.jsx
-Main component managing the multi-step form and state:
-- Form data management
-- Step navigation
-- AI service integration
-- Loading states
-
-### GeminiService.js
-Service handling AI integration:
-- Prompt engineering
-- API communication
-- Response parsing
-- Error handling
-
-### ItineraryDisplay.jsx
-Component for displaying generated travel plans:
-- Tabbed interface
-- Day-by-day itinerary
-- Place recommendations
-- Budget breakdown
-
-## 🌟 AI Prompt Engineering
-
-The application uses sophisticated prompt engineering to generate high-quality travel plans:
-
-- **Structured prompts** with clear requirements
-- **Context-aware recommendations** based on travel companions
-- **Budget-conscious suggestions** within specified ranges
-- **Activity-focused planning** based on user interests
-- **JSON response formatting** for consistent parsing
-
-## 🔒 Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# Required for AI functionality
-VITE_GEMINI_API_KEY=your_gemini_api_key
-
-# Optional for Firebase features
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
-VITE_FIREBASE_APP_ID=your_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
-```
-
-## 📱 Responsive Design
-
-The application is fully responsive and works on:
-- **Desktop computers** (1200px+)
-- **Tablets** (768px - 1199px)
-- **Mobile phones** (320px - 767px)
-
-## 🎨 Design Features
-
-- **Gradient backgrounds** for visual appeal
-- **Card-based interface** for better organization
-- **Smooth animations** and transitions
-- **Visual progress indicators** for user guidance
-- **Accessibility features** with proper ARIA labels
-- **Print-friendly styles** for offline use
-
-## 🚀 Future Enhancements
-
-- **Map integration** for visual trip planning
-- **Real-time pricing** from travel APIs
-- **Weather integration** for destination conditions
-- **User accounts** for saving multiple trips
-- **Social sharing** with custom trip URLs
-- **Collaborative planning** for group trips
-- **Mobile app** with React Native
-- **Offline functionality** with service workers
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Google Gemini AI for powerful language capabilities
-- React team for the amazing framework
-- Vite for the fast development experience
-- All contributors and testers
-
----
-
-**Happy travels! 🌍✈️**
+we will use ollama gemma 2 _2b modal for it 

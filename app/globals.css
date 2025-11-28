@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate 900 */
+  --primary: #2563eb; /* Blue 600 */
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9; /* Slate 100 */
+  --secondary-foreground: #0f172a;
+  --muted: #f8fafc; /* Slate 50 */
+  --muted-foreground: #64748b; /* Slate 500 */
+  --accent: #eff6ff; /* Blue 50 */
+  --accent-foreground: #1d4ed8; /* Blue 700 */
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Utilities */
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-blue-700 px-4 py-2 rounded-md font-medium transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-slate-200 px-4 py-2 rounded-md font-medium transition-colors;
+}
+
+.card {
+  @apply bg-white border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow;
+}
+
+/* Spinner: Snow-ball Loading */
+/* Animation keyframes from the provided spinner */
+@keyframes ball {
+  from {
+    transform: rotate(0) translateY(-6.5em);
+  }
+  50% {
+    transform: rotate(180deg) translateY(-6em);
+  }
+  to {
+    transform: rotate(360deg) translateY(-6.5em);
+  }
+}
+
+@keyframes ballInnerShadow {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
+@keyframes ballOuterShadow {
+  from {
+    transform: rotate(20deg);
+  }
+  to {
+    transform: rotate(-340deg);
+  }
+}
+
+@keyframes ballTexture {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes trackCover {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Basic CSS to render the spinner shape (not exhaustive) */
+.pl {
+  position: relative;
+  width: 10rem;
+  height: 10rem;
+  display: inline-block;
+}
+.pl__outer-ring,
+.pl__inner-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 6px solid rgba(96,165,250,0.15); /* light blue ring */
+}
+.pl__inner-ring {
+  inset: 1.25rem;
+  border-width: 8px;
+  border-color: rgba(96,165,250,0.08);
+}
+.pl__track-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 4px dashed rgba(99,102,241,0.06);
+  animation: trackCover 6s linear infinite;
+}
+.pl__ball {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3.5rem;
+  height: 3.5rem;
+  transform-origin: center center;
+  transform: translate(-50%, -50%);
+  animation: ball 6s linear infinite;
+}
+.pl__ball-texture {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.15), transparent 30%), linear-gradient(90deg, rgba(0,0,0,0.05), rgba(255,255,255,0.02));
+  animation: ballTexture 2s linear infinite alternate;
+}
+.pl__ball-outer-shadow,
+.pl__ball-inner-shadow,
+.pl__ball-side-shadows {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.pl__ball-outer-shadow { animation: ballOuterShadow 4s linear infinite; }
+.pl__ball-inner-shadow { animation: ballInnerShadow 5s linear infinite; }
+.pl__ball-side-shadows { opacity: 0.25; }
+

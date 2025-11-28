@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow users to read and write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow users to read and write their own bookings
+      match /bookings/{bookingId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Allow public read access to travel data (optional, if client needs it directly)
+    // match /flights/{flightId} { allow read: if true; }
+    // match /trains/{trainId} { allow read: if true; }
+    // match /buses/{busId} { allow read: if true; }
+    // match /hotels/{hotelId} { allow read: if true; }
+  }
+}
