@@ -132,3 +132,24 @@ export const saveBooking = async (uid: string, bookingData: Record<string, unkno
         throw error;
     }
 };
+
+// Get all bookings for a user
+export const getUserBookings = async (uid: string): Promise<Array<Record<string, any>>> => {
+    try {
+        const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+        const bookingsRef = collection(db, 'users', uid, 'bookings');
+        // Order by createdAt descending so newest bookings first if available
+        const q = query(bookingsRef, orderBy('createdAt', 'desc'));
+        const snap = await getDocs(q);
+
+        const bookings: Array<Record<string, any>> = [];
+        snap.forEach((doc) => {
+            bookings.push({ id: doc.id, ...(doc.data() as Record<string, any>) });
+        });
+
+        return bookings;
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        throw error;
+    }
+};
