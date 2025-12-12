@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useStore } from '@/store/useStore';
 import { useState } from 'react';
 import { CheckCircle, Loader2, CreditCard } from 'lucide-react';
+import { pointsToRupees } from '@/lib/points';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { TravelItem } from '@/types';
@@ -74,7 +75,7 @@ export default function CheckoutForm({ item }: CheckoutFormProps) {
             className="bg-blue-50 p-4 rounded-xl mb-6"
           >
             <p className="text-sm text-blue-600 font-medium">You earned</p>
-            <p className="text-3xl font-bold text-primary">{pointsEarned} Points</p>
+            <p className="text-3xl font-bold text-primary">{pointsEarned} Points <span className="text-sm text-muted-foreground">(₹{pointsToRupees(pointsEarned)})</span></p>
           </motion.div>
           <p className="text-sm text-muted-foreground">Redirecting to your profile...</p>
         </motion.div>

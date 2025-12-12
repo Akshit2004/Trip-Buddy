@@ -1,4 +1,7 @@
-import AiTripPlanner from '@/components/AiTripPlanner';
+import dynamic from 'next/dynamic';
+import TripLoader from '@/components/TripLoader';
+
+const AiTripPlanner = dynamic(() => import('@/components/AiTripPlanner'), { ssr: false, loading: () => <TripLoader /> });
 
 export const metadata = {
   title: 'AI Trip - TravelBuddy',

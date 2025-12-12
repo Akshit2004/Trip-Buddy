@@ -4,6 +4,10 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+// OrbitChat is loaded dynamically only when the user opens it
+import dynamic from 'next/dynamic';
+import PagePerformanceMonitor from '@/components/PagePerformanceMonitor';
+import OrbitChatToggle from '@/components/OrbitChatToggle';
 import { AuthProvider } from "@/context/AuthContext";
 
 const geistSans = Geist({
@@ -33,11 +37,15 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Navbar />
+          {/* Global performance monitor (client-only) */}
+          <PagePerformanceMonitor />
           <main className="flex-1">
             {children}
           </main>
           <Footer />
           <BottomNav />
+          {/* OrbitChat is loaded dynamically via OrbitChatToggle to avoid shipping heavy JS to all pages */}
+          <OrbitChatToggle />
         </AuthProvider>
       </body>
     </html>

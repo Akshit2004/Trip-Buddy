@@ -20,6 +20,8 @@ import { useStore } from '@/store/useStore';
 import { useAuth } from '@/context/AuthContext';
 import { saveBooking, addUserPoints } from '@/lib/userService';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { pointsToRupees } from '@/lib/points';
+import BoardingPass from '@/components/BoardingPass';
 
 const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -35,6 +37,7 @@ export default function CheckoutPage() {
     
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [bookingId, setBookingId] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     
     // Form state
@@ -99,10 +102,14 @@ export default function CheckoutPage() {
             // Simulate payment processing
             await new Promise(resolve => setTimeout(resolve, 2000));
 
+            // Generate a unique booking ID
+            const generatedBookingId = `TB${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+
             let bookingData;
 
             if (isSingleBooking && singleBookingItem) {
                 bookingData = {
+                    bookingId: generatedBookingId,
                     tripName: singleBookingItem.title,
                     origin: singleBookingItem.from || 'N/A',
                     destination: singleBookingItem.to || singleBookingItem.title,
@@ -116,6 +123,7 @@ export default function CheckoutPage() {
                 };
             } else {
                 bookingData = {
+                    bookingId: generatedBookingId,
                     tripName: `Trip to ${tripSearchParams?.destination}`,
                     origin: tripSearchParams?.origin,
                     destination: tripSearchParams?.destination,
@@ -136,6 +144,7 @@ export default function CheckoutPage() {
             // Update local store points to reflect the new total
             const { addPoints } = require('@/store/useStore').useStore.getState();
             addPoints(pointsToEarn);
+            setBookingId(generatedBookingId);
             setSuccess(true);
             
         } catch (err: any) {
@@ -348,7 +357,7 @@ export default function CheckoutPage() {
                                         <span className="text-2xl font-bold text-slate-900">{formatCurrency(totalPrice)}</span>
                                     </div>
                                     <div className="text-xs text-emerald-600 font-medium text-right">
-                                        You will earn {pointsToEarn} points
+                                        You will earn {pointsToEarn} points <span className="ml-2 text-xs text-emerald-700">(₹{pointsToRupees(pointsToEarn)})</span>
                                     </div>
                                 </div>
                             </div>
@@ -357,45 +366,26 @@ export default function CheckoutPage() {
                 </div>
             </div>
 
-            {/* Success Modal */}
+            {/* Boarding Pass Success Modal */}
             <AnimatePresence>
                 {success && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500" />
-                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Check className="w-10 h-10 text-green-600" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-2">Payment Successful!</h3>
-                            <p className="text-muted-foreground mb-8">
-                                Your trip has been booked successfully. Check your email for details.
-                            </p>
-                            <div className="flex gap-3">
-                                <button 
-                                    onClick={() => router.push('/profile')}
-                                    className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-900 font-bold hover:bg-slate-200 transition-colors"
-                                >
-                                    View Profile
-                                </button>
-                                <button 
-                                    onClick={() => router.push('/')}
-                                    className="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-blue-600 transition-colors"
-                                >
-                                    Home
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                    <BoardingPass
+                        bookingId={bookingId}
+                        tripName={isSingleBooking ? singleBookingItem?.title || 'Booking' : `Trip to ${tripSearchParams?.destination}`}
+                        origin={isSingleBooking ? (singleBookingItem?.from || 'Your Location') : (tripSearchParams?.origin || '')}
+                        destination={isSingleBooking ? (singleBookingItem?.to || singleBookingItem?.title || '') : (tripSearchParams?.destination || '')}
+                        startDate={isSingleBooking ? new Date().toISOString() : (tripSearchParams?.startDate || '')}
+                        endDate={isSingleBooking ? new Date().toISOString() : (tripSearchParams?.endDate || '')}
+                        travelers={isSingleBooking ? 1 : (tripSearchParams?.travelers || 1)}
+                        totalPrice={totalPrice}
+                        pointsEarned={pointsToEarn}
+                        transport={isSingleBooking ? (singleBookingItem ?? undefined) : (selectedTripOptions?.transport ?? undefined)}
+                        hotel={isSingleBooking ? undefined : (selectedTripOptions?.hotel ?? undefined)}
+                        passengerName={name || user?.displayName || 'Guest'}
+                        onClose={() => setSuccess(false)}
+                        onViewProfile={() => router.push('/profile')}
+                        onGoHome={() => router.push('/')}
+                    />
                 )}
             </AnimatePresence>
         </div>

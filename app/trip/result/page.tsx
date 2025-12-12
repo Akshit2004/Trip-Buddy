@@ -16,11 +16,13 @@ import {
     Download
 } from 'lucide-react';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { pointsToRupees } from '@/lib/points';
 
 import { useStore } from '@/store/useStore';
 import { useAuth } from '@/context/AuthContext';
 import { addUserPoints, saveBooking } from '@/lib/userService';
 import { TravelItem, TripPlannerResponse } from '@/types';
+import BoardingPass from '@/components/BoardingPass';
 
 const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -183,6 +185,7 @@ export default function TripResultPage() {
     const [isHotelModalOpen, setIsHotelModalOpen] = useState(false);
     const [bookingLoading, setBookingLoading] = useState(false);
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [bookingId, setBookingId] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
     // removed redundant state; compute over budget dynamically
 
@@ -243,7 +246,11 @@ export default function TripResultPage() {
         }
         setBookingLoading(true);
         try {
+            // Generate a unique booking ID
+            const generatedBookingId = `TB${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+            
             const bookingData = {
+                bookingId: generatedBookingId,
                 tripName: `Trip to ${tripSearchParams.destination}`,
                 origin: tripSearchParams.origin,
                 destination: tripSearchParams.destination,
@@ -259,6 +266,7 @@ export default function TripResultPage() {
 
             await saveBooking(user.uid, bookingData);
             await addUserPoints(user.uid, pointsToEarn);
+            setBookingId(generatedBookingId);
             setBookingSuccess(true);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } catch (err) {
@@ -528,7 +536,7 @@ export default function TripResultPage() {
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-yellow-400 bg-yellow-400/10 p-3 rounded-xl justify-center border border-yellow-400/20">
                                     <Sparkles className="w-3 h-3" />
-                                    You&apos;ll earn {pointsToEarn} points
+                                    You&apos;ll earn {pointsToEarn} points <span className="ml-2 text-xs text-yellow-500">(₹{pointsToRupees(pointsToEarn)})</span>
                                 </div>
                             </div>
 
@@ -555,45 +563,26 @@ export default function TripResultPage() {
                 </div>
             </div>
 
-            {/* Success Modal */}
+            {/* Boarding Pass Success Modal */}
             <AnimatePresence>
                 {bookingSuccess && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-[2rem] p-8 max-w-md w-full text-center relative overflow-hidden"
-                        >
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-emerald-500" />
-                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Check className="w-10 h-10 text-green-600" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-slate-900 mb-2">Trip Booked!</h3>
-                            <p className="text-muted-foreground mb-8">
-                                Your itinerary has been saved and {pointsToEarn} points have been added to your account.
-                            </p>
-                            <div className="flex gap-3">
-                                <button 
-                                    onClick={() => router.push('/profile')}
-                                    className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-900 font-bold hover:bg-slate-200 transition-colors"
-                                >
-                                    View Profile
-                                </button>
-                                <button 
-                                    onClick={() => setBookingSuccess(false)}
-                                    className="flex-1 py-3 rounded-xl bg-primary text-white font-bold hover:bg-blue-600 transition-colors"
-                                >
-                                    Done
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
+                    <BoardingPass
+                        bookingId={bookingId}
+                        tripName={`Trip to ${tripSearchParams.destination}`}
+                        origin={tripSearchParams.origin}
+                        destination={tripSearchParams.destination}
+                        startDate={tripSearchParams.startDate}
+                        endDate={tripSearchParams.endDate}
+                        travelers={tripSearchParams.travelers}
+                        totalPrice={totalPrice}
+                        pointsEarned={pointsToEarn}
+                        transport={selectedTransport || undefined}
+                        hotel={selectedHotel || undefined}
+                        passengerName={user?.displayName || 'Guest'}
+                        onClose={() => setBookingSuccess(false)}
+                        onViewProfile={() => router.push('/profile')}
+                        onGoHome={() => router.push('/')}
+                    />
                 )}
             </AnimatePresence>
         </div>
