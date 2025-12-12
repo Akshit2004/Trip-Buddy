@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 // OrbitChat is loaded dynamically only when the user opens it
-import dynamic from 'next/dynamic';
+
 import PagePerformanceMonitor from '@/components/PagePerformanceMonitor';
 import OrbitChatToggle from '@/components/OrbitChatToggle';
 import { AuthProvider } from "@/context/AuthContext";

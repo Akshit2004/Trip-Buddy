@@ -13,7 +13,7 @@ interface DetailsContentProps {
   type: string;
 }
 
-export default function DetailsContent({ item, type }: DetailsContentProps) {
+export default function DetailsContent({ item }: DetailsContentProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();

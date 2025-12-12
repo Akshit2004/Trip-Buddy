@@ -4,23 +4,24 @@ import { useEffect, useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { useAuth } from '@/context/AuthContext';
 import { getUserBookings, getUserData } from '@/lib/userService';
-import { Wallet, Calendar, MapPin, Clock, CheckCircle, Loader2, Ticket } from 'lucide-react';
+import { Wallet, Calendar, Loader2, Ticket } from 'lucide-react';
 import Link from 'next/link';
-import { Booking } from '@/store/useStore';
+// Booking import removed as unused
 import TicketCard from '@/components/TicketCard';
 import BookingItemCard from '@/components/BookingItemCard';
 import BoardingPass from '@/components/BoardingPass';
 import { AnimatePresence } from 'framer-motion';
 import { pointsToRupees } from '@/lib/points';
+import { Booking, TravelItem } from '@/types';
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { name: storeName, email: storeEmail, points: storePoints } = useStore();
   
-  const [bookings, setBookings] = useState<any[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState(storePoints);
-  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedTab, setSelectedTab] = useState<'trips' | 'bookings'>('trips');
 
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function ProfilePage() {
   const bookingItemsFlat = bookings
     .filter(b => b.type === 'single_item' || (Array.isArray(b.items) && b.items.length > 0) || b.transport || b.hotel)
     .flatMap((b) => {
-      if (Array.isArray(b.items) && b.items.length > 0) return b.items.map((it: any) => ({ parent: b, item: it }));
+      if (Array.isArray(b.items) && b.items.length > 0) return b.items.map((it: TravelItem) => ({ parent: b, item: it }));
       const item = b.transport || b.hotel;
       return item ? [{ parent: b, item }] : [];
     });
@@ -144,7 +145,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {bookingItemsFlat.map(({ parent, item }: any) => (
+                {bookingItemsFlat.map(({ parent, item }: { parent: Booking, item: TravelItem }) => (
                     <BookingItemCard
                       key={`${parent.id}-${item.id || item.title}`}
                       bookingId={parent.bookingId || parent.id}

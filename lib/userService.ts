@@ -1,6 +1,6 @@
 import { db } from './firebaseClient';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { User, UserPreferences } from '@/types';
+import { User, UserPreferences, Booking } from '@/types';
 
 // Create a new user document in Firestore
 export const createUser = async (
@@ -16,6 +16,7 @@ export const createUser = async (
             displayName,
             photoURL,
             preferences: null,
+            pro: false,
             points: 0,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -134,7 +135,7 @@ export const saveBooking = async (uid: string, bookingData: Record<string, unkno
 };
 
 // Get all bookings for a user
-export const getUserBookings = async (uid: string): Promise<Array<Record<string, any>>> => {
+export const getUserBookings = async (uid: string): Promise<Booking[]> => {
     try {
         const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
         const bookingsRef = collection(db, 'users', uid, 'bookings');
@@ -142,14 +143,34 @@ export const getUserBookings = async (uid: string): Promise<Array<Record<string,
         const q = query(bookingsRef, orderBy('createdAt', 'desc'));
         const snap = await getDocs(q);
 
-        const bookings: Array<Record<string, any>> = [];
+        const bookings: Booking[] = [];
         snap.forEach((doc) => {
-            bookings.push({ id: doc.id, ...(doc.data() as Record<string, any>) });
+            const data = doc.data() as Booking;
+            bookings.push({ ...data, id: doc.id });
         });
 
         return bookings;
     } catch (error) {
         console.error('Error fetching user bookings:', error);
+        throw error;
+    }
+};
+
+// Update user subscription status
+export const updateUserSubscription = async (
+    uid: string,
+    status: 'free' | 'pro'
+): Promise<void> => {
+    try {
+        const userRef = doc(db, 'users', uid);
+        const isPro = status === 'pro';
+        await updateDoc(userRef, {
+            pro: isPro,
+            updatedAt: serverTimestamp()
+        });
+        console.log('User subscription updated:', uid, status, 'Pro:', isPro);
+    } catch (error) {
+        console.error('Error updating subscription:', error);
         throw error;
     }
 };

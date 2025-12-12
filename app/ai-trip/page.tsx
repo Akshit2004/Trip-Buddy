@@ -1,7 +1,4 @@
-import dynamic from 'next/dynamic';
-import TripLoader from '@/components/TripLoader';
-
-const AiTripPlanner = dynamic(() => import('@/components/AiTripPlanner'), { ssr: false, loading: () => <TripLoader /> });
+import AiTripPlannerWrapper from '@/components/AiTripPlannerWrapper';
 
 export const metadata = {
   title: 'AI Trip - TravelBuddy',
@@ -12,7 +9,7 @@ export default function AiTripPage() {
   return (
     <div className="min-h-screen bg-secondary/30 py-10">
       <div className="container-custom space-y-10">
-        <AiTripPlanner />
+        <AiTripPlannerWrapper />
       </div>
     </div>
   );

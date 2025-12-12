@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     CreditCard, 
     Calendar, 
-    MapPin, 
     Users, 
     Check, 
     ArrowRight, 
@@ -14,8 +13,10 @@ import {
     Lock,
     Plane,
     Hotel,
-    AlertCircle
+    AlertCircle,
+    Zap
 } from 'lucide-react';
+import Link from 'next/link';
 import { useStore } from '@/store/useStore';
 import { useAuth } from '@/context/AuthContext';
 import { saveBooking, addUserPoints } from '@/lib/userService';
@@ -80,7 +81,8 @@ export default function CheckoutPage() {
         return total;
     }, [selectedTripOptions, tripSearchParams, tripDays, isSingleBooking, singleBookingItem]);
 
-    const pointsToEarn = Math.floor(totalPrice * 0.015);
+    const multiplier = user?.pro ? 3 : 1;
+    const pointsToEarn = Math.floor(totalPrice * 0.015 * multiplier);
 
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -142,17 +144,18 @@ export default function CheckoutPage() {
             await saveBooking(user.uid, bookingData);
             await addUserPoints(user.uid, pointsToEarn);
             // Update local store points to reflect the new total
-            const { addPoints } = require('@/store/useStore').useStore.getState();
+            const { addPoints } = useStore.getState(); // Fixed require usage
             addPoints(pointsToEarn);
             setBookingId(generatedBookingId);
             setSuccess(true);
             
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Payment/Booking error:', err);
-            if (err?.code === 'permission-denied') {
+            const error = err as { code?: string; message?: string };
+            if (error?.code === 'permission-denied') {
                 setError("Insufficient permissions. Please check your Firestore security rules.");
             } else {
-                setError(err?.message || "Payment failed. Please try again.");
+                setError(error?.message || "Payment failed. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -356,8 +359,16 @@ export default function CheckoutPage() {
                                         <span className="text-slate-500">Total Amount</span>
                                         <span className="text-2xl font-bold text-slate-900">{formatCurrency(totalPrice)}</span>
                                     </div>
-                                    <div className="text-xs text-emerald-600 font-medium text-right">
-                                        You will earn {pointsToEarn} points <span className="ml-2 text-xs text-emerald-700">(₹{pointsToRupees(pointsToEarn)})</span>
+                                    <div className="flex items-center justify-end gap-2 text-xs text-emerald-600 font-medium text-right">
+                                        <span>You will earn {pointsToEarn} points <span className="text-emerald-700">(₹{pointsToRupees(pointsToEarn)})</span></span>
+                                        {multiplier === 3 ? (
+                                            <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">3X PRO</span>
+                                        ) : (
+                                            <Link href="/subscription" className="flex items-center gap-1 text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full hover:bg-blue-100 transition-colors">
+                                                <Zap className="w-3 h-3" />
+                                                Get 3x with Pro
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             </div>

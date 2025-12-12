@@ -91,11 +91,11 @@ const TransportIcon = ({ type, className }: { type?: string; className?: string 
 
 export default function BoardingPass({
     bookingId,
-    tripName,
+    // tripName unused
     origin,
     destination,
     startDate,
-    endDate,
+    // endDate unused
     travelers,
     totalPrice,
     pointsEarned,
@@ -131,7 +131,7 @@ export default function BoardingPass({
                     text: `I'm going to ${destination}! ✈️`,
                     url: window.location.origin
                 });
-            } catch (err) {
+            } catch {
                 console.log('Share cancelled');
             }
         }
@@ -142,8 +142,10 @@ export default function BoardingPass({
         setIsDownloading(true);
         try {
             const mod = await import('html-to-image');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const toPng = (mod as any).toPng ?? (mod as any).default?.toPng ?? (mod as any).default;
             if (!toPng) throw new Error('html-to-image not available');
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const dataUrl = await (mod as any).toPng(passRef.current, { backgroundColor: '#ffffff', cacheBust: true });
             const link = document.createElement('a');
             link.href = dataUrl;
@@ -155,8 +157,8 @@ export default function BoardingPass({
             document.body.appendChild(link);
             link.click();
             link.remove();
-        } catch (err) {
-            console.error('Download error:', err);
+        } catch (downloadErr) {
+            console.error('Download error:', downloadErr);
             alert('Failed to save image. Please try again.');
         } finally {
             setIsDownloading(false);

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Plane, Train, Bus, Hotel, Calendar, Users } from 'lucide-react';
+import { Plane, Train, Bus, Users } from 'lucide-react';
 import { pointsToRupees } from '@/lib/points';
 import { format, parseISO } from 'date-fns';
 import { TravelItem } from '@/types';
@@ -34,7 +34,7 @@ const TransportIcon = ({ type }: { type?: string }) => {
   }
 };
 
-export default function BookingItemCard({ bookingId, item, date, pointsEarned = 0, onClick }: BookingItemCardProps) {
+export default function BookingItemCard({ item, date, pointsEarned = 0, onClick }: BookingItemCardProps) {
   const dateStr = date || new Date().toISOString();
   const formattedDate = (() => {
     try {

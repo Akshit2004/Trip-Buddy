@@ -15,6 +15,7 @@ import {
     Share2,
     Download
 } from 'lucide-react';
+import Link from 'next/link';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { pointsToRupees } from '@/lib/points';
 
@@ -117,19 +118,19 @@ const TimelineCard = ({
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: index * 0.1 }}
-        className="relative pl-8 pb-12 last:pb-0 group"
+        className="relative pl-4 md:pl-8 pb-12 last:pb-0 group"
     >
         <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary/30 to-transparent group-last:hidden" />
         <div className="absolute left-[-4px] top-2 w-2.5 h-2.5 rounded-full bg-white border-2 border-primary ring-4 ring-primary/10 group-hover:scale-125 transition-transform duration-300" />
         
-        <div className="rounded-3xl border border-border/50 bg-white p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+        <div className="rounded-3xl border border-border/50 bg-white p-5 md:p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <div className="flex items-center justify-between mb-4">
                 <span className="px-4 py-1.5 rounded-full bg-primary/5 text-primary text-xs font-bold uppercase tracking-wider border border-primary/10">
                     {day.day}
                 </span>
             </div>
             
-            <h4 className="text-xl font-bold mb-2 text-slate-900">{day.title}</h4>
+            <h4 className="text-lg md:text-xl font-bold mb-2 text-slate-900">{day.title}</h4>
             <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                 {day.summary}
             </p>
@@ -226,7 +227,8 @@ export default function TripResultPage() {
         return total;
     }, [selectedTransport, selectedHotel, tripSearchParams, tripDays]);
 
-    const pointsToEarn = Math.floor(totalPrice / 100);
+    const multiplier = user?.pro ? 3 : 1;
+    const pointsToEarn = Math.floor((totalPrice / 100) * multiplier);
 
     const handleBookTrip = async () => {
         if (!user) {
@@ -319,10 +321,10 @@ export default function TripResultPage() {
                                 <Sparkles className="w-4 h-4" />
                                 <span>Your AI Itinerary is Ready</span>
                             </div>
-                            <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                            <h1 className="text-3xl md:text-5xl font-bold leading-tight">
                                 Trip to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">{tripSearchParams.destination}</span>
                             </h1>
-                            <p className="text-slate-400 mt-2 max-w-xl">
+                            <p className="text-slate-400 mt-2 max-w-xl text-sm md:text-base">
                                 {generatedTrip.itinerary.overview}
                             </p>
                         </div>
@@ -342,23 +344,24 @@ export default function TripResultPage() {
             <div className="container-custom -mt-24 relative z-20">
                 {/* Budget Alert */}
                 {isOverBudget && (
-                    <div className="mb-6 p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 flex items-center justify-between gap-4">
+                    <div className="mb-6 p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                         <div>
                             <p className="text-sm font-bold">This trip exceeds your budget.</p>
                             <p className="text-xs">Your budget: <span className="font-semibold">{formatCurrency(tripSearchParams?.budget ?? 0)}</span>. Estimated cheapest total: <span className="font-semibold">{formatCurrency(generatedTrip?.budgetSummary?.estimatedTotal ?? totalPrice)}</span>.</p>
                         </div>
-                        <div className="flex gap-2">
-                            <button onClick={applyCheaperOptions} className="px-3 py-2 rounded-lg bg-white text-red-700 font-bold border border-red-100">Choose cheaper options</button>
-                            <button onClick={() => router.push('/ai-trip')} className="px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold">Re-plan</button>
+                        <div className="flex gap-2 w-full md:w-auto">
+                            <button onClick={applyCheaperOptions} className="flex-1 md:flex-none px-3 py-2 rounded-lg bg-white text-red-700 font-bold border border-red-100 text-xs whitespace-nowrap">Cheaper options</button>
+                            <button onClick={() => router.push('/ai-trip')} className="flex-1 md:flex-none px-3 py-2 rounded-lg bg-red-100 text-red-700 font-semibold text-xs whitespace-nowrap">Re-plan</button>
                         </div>
                     </div>
                 )}
-                <div className="grid lg:grid-cols-[1fr_400px] gap-8">
+                
+                <div className="flex flex-col lg:grid lg:grid-cols-[1fr_400px] gap-8 pb-32 lg:pb-0">
                     {/* Main Itinerary Column */}
-                    <div className="space-y-8">
-                        <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
-                            <h3 className="text-2xl font-bold flex items-center gap-3 mb-8">
-                                <Calendar className="w-6 h-6 text-primary" />
+                    <div className="space-y-8 order-2 lg:order-1">
+                        <div className="bg-white rounded-[2rem] p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+                            <h3 className="text-xl md:text-2xl font-bold flex items-center gap-3 mb-8">
+                                <Calendar className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                                 Day by Day Plan
                             </h3>
                             <div className="relative">
@@ -370,22 +373,22 @@ export default function TripResultPage() {
                     </div>
 
                     {/* Sidebar Booking Column */}
-                    <div className="space-y-6 lg:sticky lg:top-8 h-fit">
+                    <div className="space-y-6 order-1 lg:order-2 lg:sticky lg:top-8 h-fit">
                         {/* Transport Selection */}
                         <motion.div 
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-100"
+                            className="bg-white rounded-[2rem] p-5 md:p-6 shadow-xl shadow-slate-200/50 border border-slate-100"
                         >
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center justify-between mb-4 md:mb-6">
                                 <h3 className="text-lg font-bold flex items-center gap-2">
                                     <Plane className="w-5 h-5 text-primary" />
                                     Transport
                                 </h3>
                                 <button 
                                     onClick={() => setIsTransportModalOpen(!isTransportModalOpen)}
-                                    className="text-sm font-bold text-primary hover:bg-primary/5 px-3 py-1 rounded-full transition-colors"
+                                    className="text-xs md:text-sm font-bold text-primary hover:bg-primary/5 px-3 py-1 rounded-full transition-colors"
                                 >
                                     {isTransportModalOpen ? 'Done' : 'Change'}
                                 </button>
@@ -448,16 +451,16 @@ export default function TripResultPage() {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.3 }}
-                            className="bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-slate-100"
+                            className="bg-white rounded-[2rem] p-5 md:p-6 shadow-xl shadow-slate-200/50 border border-slate-100"
                         >
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center justify-between mb-4 md:mb-6">
                                 <h3 className="text-lg font-bold flex items-center gap-2">
                                     <HotelIcon className="w-5 h-5 text-primary" />
                                     Stay
                                 </h3>
                                 <button 
                                     onClick={() => setIsHotelModalOpen(!isHotelModalOpen)}
-                                    className="text-sm font-bold text-primary hover:bg-primary/5 px-3 py-1 rounded-full transition-colors"
+                                    className="text-xs md:text-sm font-bold text-primary hover:bg-primary/5 px-3 py-1 rounded-full transition-colors"
                                 >
                                     {isHotelModalOpen ? 'Done' : 'Change'}
                                 </button>
@@ -506,12 +509,12 @@ export default function TripResultPage() {
                             </AnimatePresence>
                         </motion.div>
 
-                        {/* Booking Summary */}
+                        {/* Booking Summary (Desktop) */}
                         <motion.div 
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.4 }}
-                            className="bg-slate-900 text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
+                            className="hidden lg:block bg-slate-900 text-white rounded-[2rem] p-8 shadow-2xl relative overflow-hidden"
                         >
                             <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl -mr-10 -mt-10" />
                             
@@ -534,11 +537,18 @@ export default function TripResultPage() {
                                     <span>Total</span>
                                     <span>{formatCurrency(totalPrice)}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-yellow-400 bg-yellow-400/10 p-3 rounded-xl justify-center border border-yellow-400/20">
-                                    <Sparkles className="w-3 h-3" />
-                                    You&apos;ll earn {pointsToEarn} points <span className="ml-2 text-xs text-yellow-500">(₹{pointsToRupees(pointsToEarn)})</span>
-                                </div>
+                            <div className="flex items-center gap-2 text-xs text-yellow-400 bg-yellow-400/10 p-3 rounded-xl justify-center border border-yellow-400/20">
+                                <Sparkles className="w-3 h-3" />
+                                <span>You&apos;ll earn {pointsToEarn} points <span className="text-yellow-500">(₹{pointsToRupees(pointsToEarn)})</span></span>
+                                {multiplier === 3 ? (
+                                    <span className="bg-gradient-to-r from-blue-500 to-purple-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded ml-1">3X PRO</span>
+                                ) : (
+                                    <Link href="/subscription" className="ml-1 text-[10px] underline decoration-yellow-400/50 hover:text-yellow-300">
+                                        Get 3x with Pro
+                                    </Link>
+                                )}
                             </div>
+                        </div>
 
                             <button
                                 onClick={handleBookTrip}
@@ -559,6 +569,35 @@ export default function TripResultPage() {
                                 <p className="text-red-400 text-xs text-center mt-3">{error}</p>
                             )}
                         </motion.div>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Mobile Fixed Booking Bar */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-40 lg:hidden shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)] pb-safe">
+                <div className="container-custom">
+                    {error && (
+                        <p className="text-red-600 text-xs text-center mb-2 font-medium bg-red-50 p-1.5 rounded-lg border border-red-100">{error}</p>
+                    )}
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex flex-col">
+                            <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Trip Cost</p>
+                            <p className="text-xl font-bold text-slate-900">{formatCurrency(totalPrice)}</p>
+                        </div>
+                         <button
+                            onClick={handleBookTrip}
+                            disabled={bookingLoading || !selectedTransport || !selectedHotel}
+                            className="bg-blue-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            {bookingLoading ? (
+                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    Book Now
+                                    <ArrowRight className="w-4 h-4" />
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
             </div>

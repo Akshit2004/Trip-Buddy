@@ -7,31 +7,37 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '@/store/useStore';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect, useState } from 'react';
-import { getUserData } from '@/lib/userService';
+
 
 export default function Navbar() {
   const storePoints = useStore((state) => state.points);
   const { user, logOut } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const [points, setPoints] = useState(storePoints);
-
-  // Fetch points from Firestore when user changes
+  // Points might be updated locally by store actions, so we prefer storePoints if available/updated
+  // or user.points from context.
+  
+  // Actually, we should probably stick to storePoints if the store is the single source of truth for session points,
+  // but initially load from user context.
+  
+  // Simplified logic:
+  const isPro = user?.pro === true;
+  
+  // Update local points when user context or store updates
   useEffect(() => {
-    const fetchPoints = async () => {
-      if (user) {
-        const data = await getUserData(user.uid);
-        if (data?.points !== undefined) {
-          setPoints(data.points);
-        }
-      }
-    };
-    fetchPoints();
-  }, [user]);
+    if (storePoints > 0) {
+        setPoints(storePoints);
+    } else if (user?.points) {
+        setPoints(user.points);
+    }
+  }, [storePoints, user]);
 
   // Keep local points in sync with store updates
   useEffect(() => {
     setPoints(storePoints);
   }, [storePoints]);
+
+
 
   return (
     <nav className="bg-white border-b border-border sticky top-0 z-50">
@@ -46,6 +52,11 @@ export default function Navbar() {
           <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">
             TravelBuddy
           </span>
+          {isPro && (
+            <span className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ml-1 border border-yellow-500/20">
+              PRO
+            </span>
+          )}
         </Link>
         
         <div className="hidden md:flex items-center gap-6">
@@ -79,6 +90,18 @@ export default function Navbar() {
         <div className="flex items-center gap-4">
           {user ? (
             <>
+              {!isPro && (
+                <Link href="/subscription" className="hidden md:block">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="bg-gradient-to-r from-amber-200 to-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all flex items-center gap-1"
+                  >
+                    Upgrade to Pro
+                  </motion.button>
+                </Link>
+              )}
+
               <motion.div 
                 key={points}
                 initial={{ scale: 1 }}
@@ -92,7 +115,7 @@ export default function Navbar() {
               <div className="relative">
                 <button 
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${isPro ? 'ring-2 ring-yellow-400 ring-offset-2' : 'bg-primary/10 hover:bg-primary/20'}`}
                 >
                   {user.photoURL ? (
                     <Image src={user.photoURL} alt="User" width={32} height={32} className="rounded-full" />
@@ -110,9 +133,13 @@ export default function Navbar() {
                       className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-border py-1 overflow-hidden"
                     >
                       <div className="px-4 py-2 border-b border-border">
-                        <p className="text-sm font-bold truncate">{user.displayName || 'User'}</p>
+                        <p className="text-sm font-bold truncate flex items-center gap-2">
+                          {user.displayName || 'User'}
+                          {isPro && <span className="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-bold border border-yellow-200">PRO</span>}
+                        </p>
                         <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                       </div>
+                      
                       <Link 
                         href="/profile" 
                         className="block px-4 py-2 text-sm hover:bg-secondary transition-colors"
@@ -120,6 +147,15 @@ export default function Navbar() {
                       >
                         Profile
                       </Link>
+
+                      <Link 
+                        href="/subscription" 
+                        className="block px-4 py-2 text-sm hover:bg-secondary transition-colors"
+                        onClick={() => setShowDropdown(false)}
+                      >
+                         {isPro ? 'Manage Subscription' : 'Upgrade to Pro ✨'}
+                      </Link>
+
                       <button 
                         onClick={() => {
                           logOut();

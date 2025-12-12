@@ -4,10 +4,7 @@ import { motion } from 'framer-motion';
 import { 
     Plane, 
     Train, 
-    Bus, 
-    Hotel, 
-    Clock,
-    Users,
+    Bus,
     ChevronRight
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -67,16 +64,16 @@ const TransportIcon = ({ type }: { type?: string }) => {
 
 export default function TicketCard({
     bookingId,
-    tripName,
+    // tripName unused
     origin,
     destination,
     startDate,
-    endDate,
+    // endDate unused
     travelers = 1,
     totalPrice,
     pointsEarned = 0,
     transportType,
-    hotelName,
+    // hotelName unused
     onClick
 }: TicketCardProps) {
     const pnr = generatePNR(bookingId);

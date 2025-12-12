@@ -9,6 +9,8 @@ export interface TravelItem {
     details: string[];
     from?: string;
     to?: string;
+    startDate?: string;
+    endDate?: string;
 }
 
 export interface TripPlannerForm {
@@ -72,7 +74,32 @@ export interface User {
     displayName: string;
     photoURL: string | null;
     preferences: UserPreferences | null;
+    pro: boolean; // Replaces subscriptionStatus
+    subscriptionExpiry?: unknown; // Firestore Timestamp
     points: number;
     createdAt: unknown; // Firestore Timestamp
     updatedAt: unknown; // Firestore Timestamp
+}
+
+export interface Booking {
+    id: string;
+    type?: string;
+    bookingId?: string;
+    items?: TravelItem[];
+    transport?: TravelItem;
+    hotel?: TravelItem;
+    itinerary?: TripItinerary;
+    tripName?: string;
+    title?: string;
+    origin?: string;
+    destination?: string;
+    startDate?: string;
+    endDate?: string;
+    travelers?: number;
+    totalPrice?: number;
+    pointsEarned?: number;
+    createdAt?: unknown;
+    status?: string;
+    // Allow for flexibility as legacy data might vary
+    [key: string]: unknown;
 }
