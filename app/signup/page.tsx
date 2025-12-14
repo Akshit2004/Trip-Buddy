@@ -8,11 +8,13 @@ import Link from 'next/link';
 import { Plane } from 'lucide-react';
 
 export default function SignupPage() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signUpWithEmail } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleGoogleSignIn = async () => {
     try {
@@ -21,6 +23,36 @@ export default function SignupPage() {
     } catch (error) {
       console.error(error);
     }
+  };
+
+  const handleEmailSignUp = async () => {
+      if (!email || !password || !name) {
+          setError('Please fill in all fields');
+          return;
+      }
+      if (password.length < 6) {
+          setError('Password should be at least 6 characters');
+          return;
+      }
+
+      setError('');
+      setLoading(true);
+
+      try {
+          await signUpWithEmail(email, password, name);
+          // New user created successfully, redirect to onboarding
+          router.push('/onboarding');
+      } catch (err: unknown) {
+          console.error(err);
+          const firebaseError = err as { code?: string };
+          if (firebaseError.code === 'auth/email-already-in-use') {
+              setError('Email already in use. Try signing in.');
+          } else {
+              setError('Failed to create account. Please try again.');
+          }
+      } finally {
+          setLoading(false);
+      }
   };
 
   const container = {
@@ -80,6 +112,11 @@ export default function SignupPage() {
           animate="show"
           className="space-y-4"
         >
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100 text-center">
+                {error}
+            </div>
+          )}
           <motion.div variants={item}>
             <label className="block text-sm font-medium mb-1">Full Name</label>
             <input 
@@ -117,9 +154,11 @@ export default function SignupPage() {
             variants={item}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold shadow-lg shadow-blue-500/20"
+            onClick={handleEmailSignUp}
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold shadow-lg shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Sign Up
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </motion.button>
 
           <motion.div variants={item} className="relative py-4">

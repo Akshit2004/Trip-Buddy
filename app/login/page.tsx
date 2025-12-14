@@ -8,10 +8,12 @@ import Link from 'next/link';
 import { Plane } from 'lucide-react';
 
 export default function LoginPage() {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithEmail } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleGoogleSignIn = async () => {
     try {
@@ -19,6 +21,24 @@ export default function LoginPage() {
       router.push('/onboarding');
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleEmailSignIn = async () => {
+    if (!email || !password) {
+        setError('Please fill in all fields');
+        return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await signInWithEmail(email, password);
+      router.push('/profile');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to sign in. Check your credentials.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,6 +99,11 @@ export default function LoginPage() {
           animate="show"
           className="space-y-4"
         >
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100 text-center">
+                {error}
+            </div>
+          )}
           <motion.div variants={item}>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input 
@@ -105,9 +130,11 @@ export default function LoginPage() {
             variants={item}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold shadow-lg shadow-blue-500/20"
+            onClick={handleEmailSignIn}
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-bold shadow-lg shadow-blue-500/20 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            Sign In
+            {loading ? 'Signing In...' : 'Sign In'}
           </motion.button>
 
           <motion.div variants={item} className="relative py-4">

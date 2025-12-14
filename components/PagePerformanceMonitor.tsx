@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 export default function PagePerformanceMonitor() {
   const pathname = usePathname();
   const navStartRef = useRef<number | null>(null);
-
+  
   useEffect(() => {
     // Called on initial page load and every navigation
     // Store a start time when the pathname changes
@@ -25,7 +25,7 @@ export default function PagePerformanceMonitor() {
         try {
           performance.mark(`route:${pathname}:render:end`);
           performance.measure(`route:${pathname}:render`, `route:${pathname}:render:start`, `route:${pathname}:render:end`);
-        } catch (e) {
+        } catch {
           // ignore
         }
       });
@@ -38,7 +38,7 @@ export default function PagePerformanceMonitor() {
   useEffect(() => {
     try {
       performance.mark(`route:${pathname}:render:start`);
-    } catch (e) {}
+    } catch {}
   }, [pathname]);
 
   return null;

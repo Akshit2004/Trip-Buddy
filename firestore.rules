@@ -11,10 +11,13 @@ service cloud.firestore {
       }
     }
     
-    // Allow public read access to travel data (optional, if client needs it directly)
-    // match /flights/{flightId} { allow read: if true; }
-    // match /trains/{trainId} { allow read: if true; }
-    // match /buses/{busId} { allow read: if true; }
-    // match /hotels/{hotelId} { allow read: if true; }
+    // Public shared trips collection
+    match /trips/{tripId} {
+      // Relaxed rules for "Anyone with the link" style sharing
+      // Since tripIds are random, knowing the ID acts as the key
+      allow read, write: if request.auth != null;
+      // Allow creating new trips
+      allow create: if request.auth != null;
+    }
   }
 }

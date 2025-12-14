@@ -24,6 +24,7 @@ import { useAuth } from '@/context/AuthContext';
 import { addUserPoints, saveBooking } from '@/lib/userService';
 import { TravelItem, TripPlannerResponse } from '@/types';
 import BoardingPass from '@/components/BoardingPass';
+import SquadSyncBar from '@/components/SquadSyncBar';
 
 const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-IN', {
@@ -338,10 +339,38 @@ export default function TripResultPage() {
                             </button>
                         </div>
                     </motion.div>
+
                 </div>
             </div>
 
-            <div className="container-custom -mt-24 relative z-20">
+            {/* Squad Sync Bar - Inserted below header */}
+            {tripSearchParams && (
+                <div className="relative z-30 -mt-8 mx-4 md:container-custom mb-8">
+                    <div className="rounded-xl overflow-hidden shadow-lg border border-white/20">
+                         <SquadSyncBar 
+                            booking={{
+                                id: '', // Not saved yet in user bookings, but needed for type
+                                bookingId: '',
+                                tripName: `Trip to ${tripSearchParams.destination}`,
+                                origin: tripSearchParams.origin,
+                                destination: tripSearchParams.destination,
+                                startDate: tripSearchParams.startDate,
+                                endDate: tripSearchParams.endDate,
+                                travelers: tripSearchParams.travelers,
+                                totalPrice: totalPrice,
+                                pointsEarned: pointsToEarn,
+                                transport: selectedTransport || undefined,
+                                hotel: selectedHotel || undefined,
+                                itinerary: generatedTrip.itinerary,
+                                isShared: false, // Default for new result
+                                collaborators: user ? [user.uid] : []
+                            }} 
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className="container-custom relative z-20">
                 {/* Budget Alert */}
                 {isOverBudget && (
                     <div className="mb-6 p-4 rounded-2xl bg-red-50 text-red-700 border border-red-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

@@ -23,6 +23,8 @@ interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -79,7 +81,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error("Error signing in with Google", error);
+      throw error;
     }
+  };
+
+  const signInWithEmail = async (email: string, pass: string) => {
+      try {
+          const { signInWithEmailAndPassword } = await import('firebase/auth');
+          await signInWithEmailAndPassword(auth, email, pass);
+      } catch (error) {
+          console.error("Error signing in with Email", error);
+          throw error;
+      }
+  };
+
+  const signUpWithEmail = async (email: string, pass: string, name: string) => {
+      try {
+          const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
+          const result = await createUserWithEmailAndPassword(auth, email, pass);
+          const user = result.user;
+          
+          await updateProfile(user, { displayName: name });
+          
+          // Create user document in Firestore
+          await createUser(
+              user.uid,
+              email,
+              name,
+              null
+          );
+          
+      } catch (error) {
+          console.error("Error signing up with Email", error);
+          throw error;
+      }
   };
 
   const logOut = async () => {
@@ -91,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, logOut }}>
       {!loading && children}
     </AuthContext.Provider>
   );
