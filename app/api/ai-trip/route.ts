@@ -12,7 +12,7 @@ import {
 
 export const runtime = 'nodejs';
 
-const COLLECTION_LIMIT = 4;
+const COLLECTION_LIMIT = 10;
 // Gemini configuration
 const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY || '';
 const PLANNER_CACHE_TTL = Number(process.env.PLANNER_CACHE_TTL_MS ?? 1000 * 60 * 5);
@@ -345,6 +345,7 @@ export async function POST(request: Request) {
         ]);
 
         const inventory = { flights, trains, buses, hotels };
+        console.log(`[AI-TRIP] Fetched inventory: Flights=${flights.length}, Trains=${trains.length}, Buses=${buses.length}, Hotels=${hotels.length}`);
         const tripDays = getTripLength(form.startDate, form.endDate);
         const nights = Math.max(1, tripDays - 1);
 
@@ -359,9 +360,9 @@ export async function POST(request: Request) {
 
         // Filter / rank inventory so cheaper options are preferred while keeping fallback
         const filterByBudgetOrFallback = (items: TravelItem[], maxPrice: number) => {
-            const under = items.filter((i) => Number.isFinite(i.price) && i.price <= maxPrice);
-            if (under.length > 0) return rankOptions(under);
-            // if nothing is under budget, just return ranked options but keep a note
+            // Return all items sorted by price/rating (cheapest first). 
+            // We previously filtered strictly by budget, but this hid valid upgrade options from the user.
+            // The AI still only sees the top few (cheapest) due to buildModelInventory limits.
             return rankOptions(items);
         };
 
@@ -369,6 +370,7 @@ export async function POST(request: Request) {
         const trainsFiltered = filterByBudgetOrFallback(inventory.trains, perPersonTransportBudget);
         const busesFiltered = filterByBudgetOrFallback(inventory.buses, perPersonTransportBudget);
         const hotelsFiltered = filterByBudgetOrFallback(inventory.hotels, perNightHotelBudget);
+        console.log(`[AI-TRIP] Filtered Hotels: ${hotelsFiltered.length} (Budget per night: ${perNightHotelBudget})`);
         const cacheKey = buildCacheKey(form, inventory);
         const cached = plannerCache.get(cacheKey);
         const now = Date.now();

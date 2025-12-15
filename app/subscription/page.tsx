@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Star, Crown, Shield, Zap, ArrowRight } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { updateUserSubscription } from '@/lib/userService';
 
@@ -20,6 +21,8 @@ export default function SubscriptionPage() {
     const router = useRouter();
     const { user, signInWithGoogle } = useAuth();
     const [loading, setLoading] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showToast, setShowToast] = useState(false);
     const isPro = user?.pro === true;
 
     const handleUpgrade = async () => {
@@ -137,6 +140,13 @@ export default function SubscriptionPage() {
                                     <span className="font-bold text-lg text-blue-100">3x Points on Bookings</span>
                                 </div>
                                 <div className="flex items-center gap-3">
+                                    <div className="p-1 rounded-full bg-indigo-500/20 text-indigo-400">
+                                        <Users className="w-4 h-4" />
+                                    </div>
+                                    <span className="font-bold text-base text-indigo-100">Squad Sync: Collaborative Trip Planning</span>
+                                    {/* Verified Users Icon */}
+                                </div>
+                                <div className="flex items-center gap-3">
                                     <div className="p-1 rounded-full bg-white/10 text-slate-300">
                                         <Shield className="w-4 h-4" />
                                     </div>
@@ -150,29 +160,38 @@ export default function SubscriptionPage() {
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleUpgrade}
-                                disabled={isPro || loading}
-                                className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
-                                    isPro 
-                                        ? 'bg-emerald-500 text-white cursor-default'
-                                        : 'bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/25'
-                                }`}
-                            >
-                                {loading ? (
-                                    'Processing...'
-                                ) : isPro ? (
-                                    <>
+                            {!isPro ? (
+                                <button
+                                    onClick={handleUpgrade}
+                                    disabled={loading}
+                                    className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 shadow-lg shadow-blue-500/25"
+                                >
+                                    {loading ? 'Processing...' : (
+                                        <>
+                                            Upgrade Now
+                                            <ArrowRight className="w-5 h-5" />
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                <div className="space-y-3">
+                                    <button
+                                        disabled={true}
+                                        className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all bg-emerald-500 text-white cursor-default"
+                                    >
                                         With Pro
                                         <Check className="w-5 h-5" />
-                                    </>
-                                ) : (
-                                    <>
-                                        Upgrade Now
-                                        <ArrowRight className="w-5 h-5" />
-                                    </>
-                                )}
-                            </button>
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => setShowCancelModal(true)}
+                                        disabled={loading}
+                                        className="w-full py-3 rounded-xl font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors text-sm"
+                                    >
+                                        Cancel Subscription
+                                    </button>
+                                </div>
+                            )}
                             
                             {!isPro && (
                                 <p className="text-xs text-center text-slate-500 mt-4">
@@ -183,6 +202,82 @@ export default function SubscriptionPage() {
                     </motion.div>
                 </div>
             </div>
+
+            {/* Cancel Confirmation Modal */}
+            <AnimatePresence>
+                {showCancelModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => !loading && setShowCancelModal(false)}
+                            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl overflow-hidden"
+                        >
+                            <div className="text-center">
+                                <div className="w-16 h-16 rounded-full bg-red-100 mx-auto flex items-center justify-center mb-6">
+                                    <Shield className="w-8 h-8 text-red-500" />
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-900 mb-2">Cancel Subscription?</h3>
+                                <p className="text-slate-500 mb-8">
+                                    Are you sure you want to cancel? You will lose access to 3x points, Pro badge, and exclusive features immediately.
+                                </p>
+                                
+                                <div className="space-y-3">
+                                    <button 
+                                        onClick={async () => {
+                                            setLoading(true);
+                                            try {
+                                                await updateUserSubscription(user?.uid as string, 'free');
+                                                setShowCancelModal(false);
+                                                setShowToast(true);
+                                                setTimeout(() => setShowToast(false), 3000);
+                                                router.refresh();
+                                            } catch (err) {
+                                                console.error(err);
+                                            } finally {
+                                                setLoading(false);
+                                            }
+                                        }}
+                                        disabled={loading}
+                                        className="w-full py-3.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-500/25 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? 'Processing...' : 'Yes, Cancel Plan'}
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowCancelModal(false)}
+                                        disabled={loading}
+                                        className="w-full py-3.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl font-bold transition-all"
+                                    >
+                                        No, Keep Benefits
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+             {/* Success Toast */}
+             <AnimatePresence>
+                {showToast && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, x: '-50%' }}
+                        animate={{ opacity: 1, y: 0, x: '-50%' }}
+                        exit={{ opacity: 0, y: 50, x: '-50%' }}
+                        className="fixed bottom-8 left-1/2 z-50 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-3"
+                    >
+                        <Check className="w-5 h-5 text-emerald-400" />
+                        <span className="font-medium">Subscription cancelled successfully.</span>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
