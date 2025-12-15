@@ -1,4 +1,4 @@
-import { db } from './firebaseClient';
+import { db } from './firebase';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { User, UserPreferences, Booking } from '@/types';
 

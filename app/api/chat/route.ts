@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
-import ollama from "ollama";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY || "";
 
 export async function POST(req: Request) {
     try {
         const { messages } = await req.json();
 
-        const systemPrompt = {
-            role: "system",
-            content: `You are Orbit, a helpful and enthusiastic AI travel assistant. 
+        if (!GEMINI_API_KEY) {
+            throw new Error("Gemini API Key key missing");
+        }
+
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+
+        const systemPrompt = `You are Orbit, a helpful and enthusiastic AI travel assistant. 
       Your goal is to help users plan their trips by asking genuine, thoughtful questions to understand their preferences, budget, and interests.
       
       Guidelines:
@@ -18,21 +25,31 @@ export async function POST(req: Request) {
       - Keep your responses concise but helpful.
       - Use emojis sparingly but effectively to add personality. 🪐
       
-      Current Context: The user is asking for help planning a trip.`,
-        };
+      Current Context: The user is asking for help planning a trip.`;
 
-        const chatMessages = [systemPrompt, ...messages];
+        // Transform messages to Gemini format if needed, or primarily use the last message with context.
+        // Simple approach: Feed history as context.
 
-        const response = await ollama.chat({
-            model: "gemma2:2b",
-            messages: chatMessages,
-            stream: true,
+        const history = messages.slice(0, -1).map((m: any) => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+        }));
+
+        const chat = model.startChat({
+            history: history,
+            systemInstruction: systemPrompt,
         });
+
+        const lastMessage = messages[messages.length - 1].content;
+        const result = await chat.sendMessageStream(lastMessage);
 
         const stream = new ReadableStream({
             async start(controller) {
-                for await (const part of response) {
-                    controller.enqueue(new TextEncoder().encode(part.message.content));
+                for await (const chunk of result.stream) {
+                    const chunkText = chunk.text();
+                    if (chunkText) {
+                        controller.enqueue(new TextEncoder().encode(chunkText));
+                    }
                 }
                 controller.close();
             },

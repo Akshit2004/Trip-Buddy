@@ -100,6 +100,8 @@ export interface Booking {
     pointsEarned?: number;
     createdAt?: unknown;
     status?: string;
+    isShared?: boolean;
+    sharedTripId?: string;
     // Allow for flexibility as legacy data might vary
     [key: string]: unknown;
 }

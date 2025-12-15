@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 import { db, admin } from '@/lib/firebaseAdmin';
 import {
@@ -12,11 +13,10 @@ import {
 export const runtime = 'nodejs';
 
 const COLLECTION_LIMIT = 4;
-const DEFAULT_MODEL = process.env.OLLAMA_MODEL ?? 'gemma2:2b';
-const OLLAMA_BASE_URL = process.env.OLLAMA_API_URL ?? 'http://127.0.0.1:11434';
-const OLLAMA_TIMEOUT_MS = Number(process.env.OLLAMA_TIMEOUT_MS ?? 15000);
-const MODEL_ITEMS_LIMIT = Number(process.env.MODEL_ITEMS_LIMIT ?? 3);
+// Gemini configuration
+const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY || '';
 const PLANNER_CACHE_TTL = Number(process.env.PLANNER_CACHE_TTL_MS ?? 1000 * 60 * 5);
+const MODEL_ITEMS_LIMIT = Number(process.env.MODEL_ITEMS_LIMIT ?? 3);
 
 type TransportCollections = 'flights' | 'trains' | 'buses';
 
@@ -70,7 +70,7 @@ const fetchCollection = async (
     limit = COLLECTION_LIMIT
 ) => {
     try {
-            let ref: admin.firestore.Query<admin.firestore.DocumentData> = db.collection(collectionName);
+        let ref: admin.firestore.Query<admin.firestore.DocumentData> = db.collection(collectionName);
 
         filters.forEach(({ field, value }) => {
             if (value) {
@@ -174,63 +174,6 @@ const safeJsonParse = (value: string) => {
     }
 };
 
-/**
- * Extract a string content from various Ollama payload shapes safely.
- */
-const asObject = (v: unknown): Record<string, unknown> | undefined =>
-    typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : undefined;
-
-const extractContentString = (payload: unknown): string | undefined => {
-    if (!payload) return undefined;
-    if (typeof payload === 'string') return payload;
-    const p = asObject(payload);
-    if (!p) return undefined;
-
-    if (typeof p.message === 'string') return p.message;
-    const messageObj = asObject(p.message);
-    if (messageObj && typeof messageObj.content === 'string') return messageObj.content as string;
-    if (messageObj && Array.isArray(messageObj.content)) {
-        return (messageObj.content as unknown[])
-            .map((c) => {
-                if (typeof c === 'string') return c;
-                const co = asObject(c);
-                return (co?.text as string) ?? (co?.content as string) ?? '';
-            })
-            .filter(Boolean)
-            .join('\n');
-    }
-
-    if (typeof p.response === 'string') return p.response;
-    if (Array.isArray(p.response)) {
-        return (p.response as unknown[])
-            .map((r) => {
-                if (typeof r === 'string') return r;
-                const ro = asObject(r);
-                return (ro?.content as string) ?? '';
-            })
-            .filter(Boolean)
-            .join('\n');
-    }
-
-    if (Array.isArray(p.output) && p.output[0]) {
-        const out = p.output[0];
-        if (typeof out === 'string') return out;
-        const outObj = asObject(out);
-        if (outObj && Array.isArray(outObj.content)) {
-            return (outObj.content as unknown[])
-                .map((c) => {
-                    if (typeof c === 'string') return c;
-                    const co = asObject(c);
-                    return (co?.text as string) ?? (co?.content as string) ?? '';
-                })
-                .filter(Boolean)
-                .join('\n');
-        }
-        if (typeof (outObj?.content) === 'string') return outObj.content as string;
-    }
-    return undefined;
-};
-
 const getTripLength = (start: string, end: string) => {
     try {
         const diff =
@@ -280,8 +223,7 @@ const buildFallbackItinerary = (
             experiences: Math.round(form.budget * 0.25)
         },
         tips: [
-            `Reserve ${
-                hotels[0]?.title ?? 'your preferred stay'
+            `Reserve ${hotels[0]?.title ?? 'your preferred stay'
             } at least 2 weeks ahead for better rates.`,
             'Keep e-tickets synced in one wallet for seamless boarding.',
             'Use off-peak slots for popular sights to avoid long queues.'
@@ -299,7 +241,16 @@ const buildAiItinerary = async (
         hotels: TravelItem[];
     }
 ): Promise<TripItinerary> => {
-    const systemPrompt = `You are TravelBuddy AI, an Indian travel concierge. Craft concise travel plans and respond only in valid JSON with the schema:
+    if (!GEMINI_API_KEY) {
+        console.warn('Gemini API Key missing, using fallback.');
+        return buildFallbackItinerary(form, selections.hotels);
+    }
+
+    try {
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+
+        const systemPrompt = `You are TravelBuddy AI, an Indian travel concierage. Craft concise travel plans and respond only in valid JSON with the schema:
 {
   "overview": "string",
   "budgetBreakdown": { "transport": number, "stays": number, "experiences": number },
@@ -315,7 +266,7 @@ const buildAiItinerary = async (
   ]
 }`;
 
-    const userPrompt = `
+        const userPrompt = `
 Trip request:
 - From: ${form.origin}
 - To: ${form.destination}
@@ -330,44 +281,20 @@ ${JSON.stringify(buildModelInventory(selections))}
 
 Deliver a JSON plan (no commentary) referencing the strongest options.`;
 
-    try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), OLLAMA_TIMEOUT_MS);
+        const result = await model.generateContent([
+            systemPrompt,
+            userPrompt
+        ]);
 
-        const ollamaResponse = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: DEFAULT_MODEL,
-                stream: false,
-                options: { temperature: 0.4 },
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ]
-            }),
-            signal: controller.signal
-        }).finally(() => clearTimeout(timeout));
+        const responseText = result.response.text();
+        const content = stripJsonFence(responseText);
 
-        if (!ollamaResponse.ok) {
-            throw new Error(
-                `Ollama responded with ${ollamaResponse.status}`
-            );
-        }
-
-        const payload = await ollamaResponse.json();
-        const content: string | undefined = extractContentString(payload);
-
-        if (!content) {
-            throw new Error('Missing content from Ollama response');
-        }
-
-        const parsed = safeJsonParse(stripJsonFence(content || ''));
+        const parsed = safeJsonParse(content);
         if (parsed?.dailyPlan) {
             return parsed as TripItinerary;
         }
 
-        throw new Error('Invalid itinerary shape');
+        throw new Error('Invalid itinerary shape from Gemini');
     } catch (error) {
         console.error('AI itinerary generation failed:', error);
         return buildFallbackItinerary(form, selections.hotels);
@@ -396,8 +323,8 @@ export async function POST(request: Request) {
             travelStyle: body.travelStyle ?? 'balanced',
             interests: Array.isArray(body.interests)
                 ? body.interests
-                      .map((interest) => sanitizeString(interest))
-                      .filter(Boolean)
+                    .map((interest) => sanitizeString(interest))
+                    .filter(Boolean)
                 : []
         };
 
@@ -493,4 +420,3 @@ export async function POST(request: Request) {
         );
     }
 }
-
